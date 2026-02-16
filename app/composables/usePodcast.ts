@@ -10,23 +10,12 @@ import type { Episode, Podcast, PodcastFeed } from '~/types/podcast'
  * - Handles loading and error states
  */
 export const usePodcast = () => {
-  // Check for feed override from localStorage (client-side only)
-  const getFeedOverride = () => {
-    if (import.meta.client) {
-      return localStorage.getItem('podcast-theme-feed-override')
-    }
-    return null
-  }
-
-  const feedOverride = getFeedOverride()
-
   // Fetch podcast feed from server API
   const { data, status, error: fetchError, refresh } = useFetch<PodcastFeed>('/api/podcast', {
     // Cache the response to avoid refetching on every component mount
-    key: feedOverride ? `podcast-feed-${feedOverride}` : 'podcast-feed',
+    key: 'podcast-feed',
     // Works with SSR and client-side hydration
     server: true,
-    query: feedOverride ? { feedUrl: feedOverride } : {},
   })
 
   // Reactive computed refs for easier access
