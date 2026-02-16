@@ -388,22 +388,29 @@ nuxt-podcast-theme/
 
 **MANDATORY WORKFLOW:**
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
+1. **Test your changes** - CRITICAL: Before closing tasks or committing:
+   - Verify the dev server loads without errors (check http://localhost:3001)
+   - Test the functionality you just implemented works as expected
+   - Check for syntax errors, missing closing tags, or runtime errors
+   - If errors occur, fix them BEFORE marking tasks as complete
+2. **File issues for remaining work** - Create issues for anything that needs follow-up
+3. **Run quality gates** (if code changed) - Tests, linters, builds
+4. **Update issue status** - Close finished work, update in-progress items
+5. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
    bd sync
    git push
    git status  # MUST show "up to date with origin"
    ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+6. **Clean up** - Clear stashes, prune remote branches
+7. **Verify** - All changes committed AND pushed
+8. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+- **ALWAYS test before closing tasks** - Don't close tasks with broken code
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
+- If tests fail or errors occur, fix them before landing the plane
