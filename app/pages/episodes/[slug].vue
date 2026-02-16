@@ -210,9 +210,9 @@ useHead({
             type="button"
             @click="playEpisode"
           >
-            <Icon v-if="player.currentEpisode?.guid === episode.guid && player.isPlaying" name="ph:pause-fill" size="20" />
+            <Icon v-if="player.currentEpisode?.guid === episode.guid && player.isPlaying.value" name="ph:pause-fill" size="20" />
             <Icon v-else name="ph:play-fill" size="20" />
-            {{ player.currentEpisode?.guid === episode.guid && player.isPlaying ? 'Pause' : 'Play Episode' }}
+            {{ player.currentEpisode?.guid === episode.guid && player.isPlaying.value ? 'Pause' : 'Play Episode' }}
           </button>
           
           <span class="episode-duration-display">
