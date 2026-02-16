@@ -114,7 +114,7 @@ const handlePlay = (e: Event) => {
 }
 
 .episode-card__link:hover .episode-card__artwork img {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .episode-card__meta {
