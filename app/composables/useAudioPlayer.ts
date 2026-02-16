@@ -64,16 +64,18 @@ export function useAudioPlayer() {
       return
     }
 
-    // Unload previous audio
+    // Unload previous audio to free up audio pool
     if (howl) {
+      howl.stop()
       howl.unload()
+      howl = null
     }
 
     // Create new Howl instance
     howl = new Howl({
       src: [episode.audioUrl],
       html5: true, // Use HTML5 Audio for streaming
-      preload: true,
+      preload: 'metadata', // Only preload metadata, not the entire file
       volume: state.value.volume,
       rate: state.value.playbackRate,
       onload: () => {
