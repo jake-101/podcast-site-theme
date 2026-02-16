@@ -361,11 +361,15 @@ useHead({
   overflow: hidden;
   border-radius: var(--radius-medium);
   box-shadow: var(--shadow-medium);
+  width: 300px;
+  height: 300px;
 }
 
 .episode-artwork img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   display: block;
 }
 
