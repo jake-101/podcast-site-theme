@@ -1,5 +1,10 @@
 /* Podcast-specific CSS overrides on top of oat.css */
 
+/* CSS Variables */
+:root {
+  --transition-hover: 0.3s;
+}
+
 /* Episode grid layout */
 .episode-grid {
   display: grid;

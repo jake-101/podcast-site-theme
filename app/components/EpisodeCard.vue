@@ -110,6 +110,11 @@ const handlePlay = (e: Event) => {
   aspect-ratio: 1;
   object-fit: cover;
   display: block;
+  transition: transform var(--transition-hover, 0.3s) ease-out;
+}
+
+.episode-card__link:hover .episode-card__artwork img {
+  transform: scale(1.05);
 }
 
 .episode-card__meta {
