@@ -98,6 +98,10 @@ const copyShareUrl = async () => {
 const isCurrentEpisode = computed(() => player.currentEpisode.value?.guid === episode.value?.guid)
 const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.value)
 
+// Transcript availability and tab state
+const hasTranscript = computed(() => !!episode.value?.podcast2?.transcript?.url)
+const activeTab = ref<'shownotes' | 'transcript'>('shownotes')
+
 // Play/pause this episode
 const playEpisode = () => {
   if (!episode.value) return
@@ -252,49 +256,70 @@ useHead({
       </div>
     </section>
 
-    <!-- Show notes with clickable timestamps -->
-    <section v-if="showNotes" class="episode-shownotes">
-      <h2>Show Notes</h2>
-      <div 
-        class="shownotes-content"
-        v-html="showNotes"
-        @click="handleTimestampClick"
-      ></div>
-    </section>
-
-    <!-- Podcasting 2.0 features -->
-    <section v-if="episode.transcript || episode.funding || episode.persons" class="podcast20-features">
-      <!-- Transcript link -->
-      <div v-if="episode.transcript" class="feature-item">
-        <h3>Transcript</h3>
-        <a 
-          :href="episode.transcript.url" 
-          target="_blank" 
-          rel="noopener"
-          class="transcript-link"
+    <!-- Content tabs: Show Notes / Transcript -->
+    <section v-if="showNotes || hasTranscript" class="episode-content-tabs">
+      <!-- Tab bar (only show if transcript available) -->
+      <div v-if="hasTranscript" class="tab-bar">
+        <button
+          type="button"
+          class="tab-button"
+          :class="{ active: activeTab === 'shownotes' }"
+          @click="activeTab = 'shownotes'"
         >
-          {{ episode.transcript.type }} transcript
-        </a>
+          <Icon name="ph:note" size="16" />
+          Show Notes
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          :class="{ active: activeTab === 'transcript' }"
+          @click="activeTab = 'transcript'"
+        >
+          <Icon name="ph:closed-captioning" size="16" />
+          Transcript
+        </button>
       </div>
 
+      <!-- Show Notes tab -->
+      <div v-show="activeTab === 'shownotes' || !hasTranscript" class="tab-panel">
+        <h2 v-if="!hasTranscript">Show Notes</h2>
+        <div 
+          v-if="showNotes"
+          class="shownotes-content"
+          v-html="showNotes"
+          @click="handleTimestampClick"
+        />
+        <p v-else class="no-content">No show notes available for this episode.</p>
+      </div>
+
+      <!-- Transcript tab -->
+      <div v-if="hasTranscript" v-show="activeTab === 'transcript'" class="tab-panel">
+        <TranscriptViewer :episode="episode" />
+      </div>
+    </section>
+
+    <!-- Podcasting 2.0 features (funding, contributors) -->
+    <section v-if="episode.podcast2?.funding?.length || episode.podcast2?.persons?.length" class="podcast20-features">
       <!-- Funding/support links -->
-      <div v-if="episode.funding" class="feature-item">
+      <div v-if="episode.podcast2?.funding?.length" class="feature-item">
         <h3>Support</h3>
-        <a 
-          :href="episode.funding.url" 
-          target="_blank" 
-          rel="noopener"
-          class="funding-link"
-        >
-          {{ episode.funding.message || 'Support this podcast' }}
-        </a>
+        <div v-for="fund in episode.podcast2.funding" :key="fund.url" class="funding-entry">
+          <a 
+            :href="fund.url" 
+            target="_blank" 
+            rel="noopener"
+            class="funding-link"
+          >
+            {{ fund.text || 'Support this podcast' }}
+          </a>
+        </div>
       </div>
 
       <!-- Episode contributors -->
-      <div v-if="episode.persons && episode.persons.length > 0" class="feature-item">
+      <div v-if="episode.podcast2?.persons?.length" class="feature-item">
         <h3>Contributors</h3>
         <ul class="persons-list">
-          <li v-for="person in episode.persons" :key="person.name">
+          <li v-for="person in episode.podcast2.persons" :key="person.name">
             <strong>{{ person.name }}</strong>
             <span v-if="person.role"> - {{ person.role }}</span>
             <a 
@@ -302,8 +327,9 @@ useHead({
               :href="person.href" 
               target="_blank" 
               rel="noopener"
+              class="person-link"
             >
-              🔗
+              (link)
             </a>
           </li>
         </ul>
@@ -538,13 +564,51 @@ useHead({
   color: var(--text-muted, #6b7280);
 }
 
-.episode-shownotes {
+/* ── Content Tabs ── */
+.episode-content-tabs {
   margin-bottom: 2rem;
 }
 
-.episode-shownotes h2 {
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.tab-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tab-button:hover {
+  color: var(--foreground);
+}
+
+.tab-button.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-panel h2 {
   margin-bottom: 1rem;
   font-size: 1.5rem;
+}
+
+.no-content {
+  color: var(--muted-foreground);
+  font-style: italic;
 }
 
 .shownotes-content {
@@ -584,10 +648,18 @@ useHead({
   font-weight: 600;
 }
 
-.transcript-link,
-.funding-link {
+.funding-link,
+.person-link {
   color: var(--primary, #2563eb);
   text-decoration: underline;
+}
+
+.funding-entry {
+  margin-bottom: 0.25rem;
+}
+
+.funding-entry:last-child {
+  margin-bottom: 0;
 }
 
 .persons-list {
@@ -640,6 +712,11 @@ useHead({
 
   .episode-title {
     font-size: 1.75rem;
+  }
+
+  .tab-button {
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
   }
   
   .episode-actions {

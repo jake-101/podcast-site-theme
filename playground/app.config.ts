@@ -1,16 +1,13 @@
 export default defineAppConfig({
   podcast: {
-    feedUrl: 'https://feeds.simplecast.com/jn7O6Fnt',
-    siteTitle: '99% Invisible',
+    feedUrl: 'https://podnews.net/rss',
+    siteTitle: 'Podnews',
     platforms: {
-      apple: '',
-      spotify: '',
-      youtube: '',
-      pocketcasts: '',
-      overcast: '',
-      rss: 'https://feeds.simplecast.com/jn7O6Fnt',
+      apple: 'https://podcasts.apple.com/podcast/id1488993527',
+      rss: 'https://podnews.net/rss',
     },
-    episodesPerPage: 12,
+    episodesPerPage: 18,
     theme: 'auto',
   },
 })
+
