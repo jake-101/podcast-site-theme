@@ -94,14 +94,15 @@ const copyShareUrl = async () => {
   }
 }
 
+// Check if this episode is currently playing
+const isCurrentEpisode = computed(() => player.currentEpisode.value?.guid === episode.value?.guid)
+const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.value)
+
 // Play/pause this episode
 const playEpisode = () => {
   if (!episode.value) return
   
-  const isCurrentEpisode = player.currentEpisode.value?.guid === episode.value.guid
-  const isPlaying = isCurrentEpisode && player.isPlaying.value
-  
-  if (isPlaying) {
+  if (isPlaying.value) {
     player.pause()
   } else {
     player.play(episode.value)
@@ -210,9 +211,9 @@ useHead({
             type="button"
             @click="playEpisode"
           >
-            <Icon v-if="player.currentEpisode?.guid === episode.guid && player.isPlaying.value" name="ph:pause-fill" size="20" />
+            <Icon v-if="isPlaying" name="ph:pause-fill" size="20" />
             <Icon v-else name="ph:play-fill" size="20" />
-            {{ player.currentEpisode?.guid === episode.guid && player.isPlaying.value ? 'Pause' : 'Play Episode' }}
+            {{ isPlaying ? 'Pause' : 'Play Episode' }}
           </button>
           
           <span class="episode-duration-display">
