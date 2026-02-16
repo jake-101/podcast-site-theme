@@ -124,12 +124,13 @@ Parses both iTunes namespace and Podcasting 2.0 namespace tags. Reliably extract
 
 ## Test Feeds
 
-Use these feeds for development and testing (they cover different hosting platforms and feed structures):
+For a comprehensive list of test podcast feeds covering different platforms and features, see **[docs/test-feeds.md](docs/test-feeds.md)**.
 
-- `https://feed.syntax.fm/` - Syntax.fm (Megaphone, 978 episodes, rich HTML show notes with timestamps)
-- `https://feeds.megaphone.fm/the-rewatchables` - The Rewatchables (Megaphone, 446 episodes, guests in titles)
-- `https://feeds.simplecast.com/jn7O6Fnt` - 99% Invisible (Simplecast, 774 episodes, episode types, keywords)
-- `https://feeds.transistor.fm/acq2` - ACQ2/Acquired (Transistor, 112 episodes, Podcasting 2.0 tags)
+The test feeds include popular podcasts with varying characteristics:
+- Different hosting platforms (Simplecast, Megaphone, Transistor, Art19, Audioboom, custom)
+- Feed sizes ranging from 100+ to 900+ episodes
+- Podcasting 2.0 features (transcripts, chapters, person tags, funding, location data)
+- Various metadata patterns (timestamps in show notes, episode types, video enclosures)
 
 ## Project Structure
 
