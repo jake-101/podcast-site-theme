@@ -174,18 +174,23 @@ const artworkUrl = computed(() => {
       <!-- Secondary controls -->
       <div class="audio-player__secondary-controls">
         <!-- Playback speed -->
-        <button 
-          type="button"
-          class="audio-player__speed-button"
-          @click="player.cycleSpeed()"
-          :title="`Playback speed: ${player.playbackRate.value}x`"
-        >
-          {{ player.playbackRate.value }}x
-        </button>
+        <SpeedMenu 
+          :current-speed="player.playbackRate.value"
+          :speed-presets="player.speedPresets"
+          @select-speed="player.setSpeed"
+        />
 
         <!-- Volume control (hidden on mobile) -->
         <div class="audio-player__volume">
-          <Icon name="ph:speaker-high-bold" size="18" />
+          <button
+            type="button"
+            class="audio-player__mute-button"
+            @click="player.toggleMute()"
+            :aria-label="player.isMuted.value ? 'Unmute' : 'Mute'"
+            :title="player.isMuted.value ? 'Unmute' : 'Mute'"
+          >
+            <Icon :name="player.speakerIcon.value" size="18" />
+          </button>
           <input 
             id="volume-slider"
             type="range" 
@@ -211,5 +216,23 @@ const artworkUrl = computed(() => {
   justify-content: center;
   background-color: var(--muted);
   color: var(--muted-foreground);
+}
+
+.audio-player__mute-button {
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  transition: background-color 0.2s;
+}
+
+.audio-player__mute-button:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
 }
 </style>

@@ -12,6 +12,8 @@ interface AudioPlayerState {
   volume: number
   playbackRate: number
   isLoading: boolean
+  isMuted: boolean
+  volumeBeforeMute: number
 }
 
 // Playback speed presets
@@ -26,6 +28,8 @@ const state = ref<AudioPlayerState>({
   volume: 0.8,
   playbackRate: 1,
   isLoading: false,
+  isMuted: false,
+  volumeBeforeMute: 0.8,
 })
 
 let howl: Howl | null = null
@@ -198,6 +202,32 @@ export function useAudioPlayer() {
       howl.volume(clampedVolume)
     }
     state.value.volume = clampedVolume
+    
+    // Unmute if volume is set above 0
+    if (clampedVolume > 0 && state.value.isMuted) {
+      state.value.isMuted = false
+    }
+    // Auto-mute if volume is set to 0
+    if (clampedVolume === 0 && !state.value.isMuted) {
+      state.value.isMuted = true
+    }
+  }
+
+  /**
+   * Toggle mute on/off
+   */
+  const toggleMute = () => {
+    if (state.value.isMuted) {
+      // Unmute: restore previous volume
+      const volumeToRestore = state.value.volumeBeforeMute > 0 ? state.value.volumeBeforeMute : 0.8
+      setVolume(volumeToRestore)
+      state.value.isMuted = false
+    } else {
+      // Mute: save current volume and set to 0
+      state.value.volumeBeforeMute = state.value.volume
+      setVolume(0)
+      state.value.isMuted = true
+    }
   }
 
   /**
@@ -241,6 +271,21 @@ export function useAudioPlayer() {
     if (state.value.duration === 0) return 0
     return (state.value.currentTime / state.value.duration) * 100
   })
+  
+  /**
+   * Get appropriate speaker icon based on volume/mute state
+   */
+  const speakerIcon = computed(() => {
+    if (state.value.isMuted || state.value.volume === 0) {
+      return 'ph:speaker-x-bold'
+    } else if (state.value.volume < 0.33) {
+      return 'ph:speaker-low-bold'
+    } else if (state.value.volume < 0.66) {
+      return 'ph:speaker-bold'
+    } else {
+      return 'ph:speaker-high-bold'
+    }
+  })
 
   return {
     // State
@@ -251,8 +296,10 @@ export function useAudioPlayer() {
     volume: computed(() => state.value.volume),
     playbackRate: computed(() => state.value.playbackRate),
     isLoading: computed(() => state.value.isLoading),
+    isMuted: computed(() => state.value.isMuted),
     hasEpisode,
     progressPercent,
+    speakerIcon,
 
     // Methods
     play,
@@ -264,6 +311,7 @@ export function useAudioPlayer() {
     setSpeed,
     cycleSpeed,
     setVolume,
+    toggleMute,
     getShareUrl,
 
     // Constants
