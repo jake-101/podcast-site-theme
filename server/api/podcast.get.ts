@@ -9,9 +9,10 @@ import { getCachedPodcastFeed } from '../utils/feed-cache'
  */
 export default defineEventHandler(async (event): Promise<PodcastFeed> => {
   try {
-    // Get the feed URL from app config
+    // Get the feed URL from query parameter (for testing) or app config
+    const query = getQuery(event)
     const appConfig = useAppConfig(event)
-    const feedUrl = appConfig.podcast?.feedUrl
+    const feedUrl = (query.feedUrl as string) || appConfig.podcast?.feedUrl
     
     // Validate feed URL is configured
     if (!feedUrl) {

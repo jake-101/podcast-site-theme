@@ -188,10 +188,6 @@ useHead({
           <Icon name="ph:calendar-blank" size="16" />
           {{ formatDate(episode.pubDate) }}
         </span>
-        <span class="episode-detail-item">
-          <Icon name="ph:clock" size="16" />
-          {{ formatDuration(episode.duration) }}
-        </span>
         <span v-if="episode.episodeNumber" class="episode-detail-item">
           <Icon name="ph:hash" size="16" />
           <template v-if="episode.seasonNumber">S{{ episode.seasonNumber }} </template>
@@ -201,15 +197,22 @@ useHead({
 
       <!-- Actions -->
       <div class="episode-actions">
-        <button 
-          class="play-button"
-          type="button"
-          @click="playEpisode"
-        >
-          <Icon v-if="player.currentEpisode?.guid === episode.guid && player.isPlaying" name="ph:pause-fill" size="20" />
-          <Icon v-else name="ph:play-fill" size="20" />
-          {{ player.currentEpisode?.guid === episode.guid && player.isPlaying ? 'Pause' : 'Play Episode' }}
-        </button>
+        <div class="episode-actions-left">
+          <button 
+            class="play-button"
+            type="button"
+            @click="playEpisode"
+          >
+            <Icon v-if="player.currentEpisode?.guid === episode.guid && player.isPlaying" name="ph:pause-fill" size="20" />
+            <Icon v-else name="ph:play-fill" size="20" />
+            {{ player.currentEpisode?.guid === episode.guid && player.isPlaying ? 'Pause' : 'Play Episode' }}
+          </button>
+          
+          <span class="episode-duration-display">
+            <Icon name="ph:clock" size="16" />
+            {{ formatDuration(episode.duration) }}
+          </span>
+        </div>
 
         <button 
           class="share-button"
@@ -437,11 +440,20 @@ useHead({
 /* ── Actions ── */
 .episode-actions {
   display: flex;
-  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   flex-wrap: wrap;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
+}
+
+.episode-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .play-button,
@@ -477,6 +489,15 @@ useHead({
 .play-button:hover {
   background-color: color-mix(in srgb, var(--primary), black 10%);
   color: var(--primary-foreground);
+}
+
+.episode-duration-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted-foreground);
+  font-weight: 500;
 }
 
 .episode-description {
@@ -611,11 +632,17 @@ useHead({
   
   .episode-actions {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .episode-actions-left {
+    width: 100%;
   }
 
   .play-button,
   .share-button {
     justify-content: center;
+    width: 100%;
   }
 }
 </style>

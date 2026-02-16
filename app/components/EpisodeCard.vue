@@ -12,7 +12,13 @@ const emit = defineEmits<{
   play: [episode: Episode]
 }>()
 
+const player = useAudioPlayer()
+
 const artwork = computed(() => props.episode.artwork || props.showArtwork || '')
+
+// Check if this episode is currently playing
+const isCurrentEpisode = computed(() => player.currentEpisode.value?.guid === props.episode.guid)
+const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.value)
 
 // Format date to human-readable format
 const formattedDate = computed(() => {
@@ -51,7 +57,12 @@ const badgeClass = computed(() => {
 const handlePlay = (e: Event) => {
   e.preventDefault()
   e.stopPropagation()
-  emit('play', props.episode)
+  
+  if (isPlaying.value) {
+    player.pause()
+  } else {
+    emit('play', props.episode)
+  }
 }
 </script>
 
@@ -68,10 +79,6 @@ const handlePlay = (e: Event) => {
           <Icon name="ph:calendar-blank" size="14" />
           {{ formattedDate }}
         </span>
-        <span class="episode-card__meta-item">
-          <Icon name="ph:clock" size="14" />
-          {{ formattedDuration }}
-        </span>
       </div>
       
       <div class="episode-card__body">
@@ -81,10 +88,17 @@ const handlePlay = (e: Event) => {
         </p>
       </div>
       
-      <button @click="handlePlay" type="button" class="episode-card__play-btn">
-        <Icon name="ph:play-fill" size="14" />
-        Play Episode
-      </button>
+      <div class="episode-card__actions">
+        <button @click="handlePlay" type="button" class="episode-card__play-btn">
+          <Icon v-if="isPlaying" name="ph:pause-fill" size="14" />
+          <Icon v-else name="ph:play-fill" size="14" />
+          {{ isPlaying ? 'Pause' : 'Play Episode' }}
+        </button>
+        <span class="episode-card__duration">
+          <Icon name="ph:clock" size="14" />
+          {{ formattedDuration }}
+        </span>
+      </div>
     </NuxtLink>
   </article>
 </template>
@@ -149,14 +163,29 @@ const handlePlay = (e: Event) => {
   color: var(--muted-foreground);
 }
 
+.episode-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.episode-card__duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
 .episode-card__play-btn {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 1rem;
-  align-self: flex-start;
   padding: 0.5rem 1rem;
   background-color: var(--primary);
   color: var(--primary-foreground);
