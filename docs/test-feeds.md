@@ -19,12 +19,12 @@ These feeds provide additional testing scenarios for advanced features:
 |---------|----------|----------|------------------|
 | **The Joe Rogan Experience** | `https://feeds.simplecast.com/7HTVlE_g` | Simplecast | Transcripts, Chapters |
 | **The Daily (NYT)** | `https://feeds.simplecast.com/54nAGcIl` | Simplecast | Native Transcripts, Remote Items |
-| **Huberman Lab** | `https://feeds.simplecast.com/p2vBDe1W` | Simplecast | Deep Metadata, Transcripts |
+| **Huberman Lab** | `https://feeds.megaphone.fm/hubermanlab` | Megaphone | Deep Metadata, Transcripts |
 | **Lex Fridman Podcast** | `https://lexfridman.com/feed/podcast/` | Custom | Chapters, High-Res Artwork |
 | **The Rest Is History** | `https://feeds.megaphone.fm/GLT4787413333` | Megaphone | Chapters, Advanced Tracking |
 | **New Heights (Kelce Bros)** | `https://rss.art19.com/new-heights` | Art19 | Video Enclosures, Dynamic Ads |
 | **Crime Junkie** | `https://feeds.simplecast.com/i6hk` | Simplecast | Transcripts, Person Tags |
-| **SmartLess** | `https://feeds.simplecast.com/smartless` | Simplecast | Early Access Tags (Wondery+) |
+| **SmartLess** | `https://rss.art19.com/smartless` | Art19 | Early Access Tags (Wondery+) |
 | **Dateline NBC** | `https://podcastfeeds.nbcnews.com/dateline-nbc` | NBC News | Cross-platform GUIDs |
 | **Pod Save America** | `https://audioboom.com/channels/5166624.rss` | Audioboom | Location Tags, Transcripts |
 
