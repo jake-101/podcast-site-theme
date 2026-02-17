@@ -623,14 +623,30 @@ useHead({
 
 /* Style timestamp links */
 .shownotes-content :deep(.timestamp-link) {
-  color: var(--primary, #2563eb);
-  text-decoration: underline;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 0.1em 0.45em;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border-radius: 0.3em;
+  font-size: 0.8em;
   font-weight: 600;
+  font-family: ui-monospace, monospace;
+  text-decoration: none;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: opacity 0.15s;
+}
+
+.shownotes-content :deep(.timestamp-link::before) {
+  content: '▶';
+  font-size: 0.7em;
+  opacity: 0.8;
 }
 
 .shownotes-content :deep(.timestamp-link:hover) {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .podcast20-features {
