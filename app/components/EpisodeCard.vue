@@ -4,6 +4,7 @@ import type { Episode } from '~/types/podcast'
 interface Props {
   episode: Episode
   showArtwork?: string // Fallback to show artwork if episode has none
+  hideArtwork?: boolean // Hide episode artwork entirely
 }
 
 const props = defineProps<Props>()
@@ -61,7 +62,7 @@ const handlePlay = (e: Event) => {
 <template>
   <article class="card episode-card">
     <NuxtLink :to="`/episodes/${episode.slug}`" class="episode-card__link">
-      <div class="episode-card__artwork">
+      <div v-if="!hideArtwork" class="episode-card__artwork">
         <NuxtImg :src="artwork" :alt="`${episode.title} artwork`" sizes="300px" loading="lazy" />
       </div>
       

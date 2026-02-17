@@ -5,6 +5,7 @@ interface Props {
   episodes: Episode[]
   episodesPerPage?: number
   showArtwork?: string
+  hideArtwork?: boolean
   loading?: boolean
 }
 
@@ -17,8 +18,8 @@ const emit = defineEmits<{
   play: [episode: Episode]
 }>()
 
-// Search functionality
-const searchQuery = ref('')
+// Search functionality — shared state with nav search input
+const { query: searchQuery } = useEpisodeSearch()
 const filteredEpisodes = computed(() => {
   if (!searchQuery.value.trim()) {
     return props.episodes
@@ -82,11 +83,11 @@ const handlePlay = (episode: Episode) => {
 
 <template>
   <div>
-    <EpisodeSearch
-      @update:query="searchQuery = $event"
-      :result-count="filteredEpisodes.length"
-    />
-    
+    <!-- Search result count shown when a query is active -->
+    <p v-if="searchQuery" class="episode-grid__result-count">
+      <small>{{ filteredEpisodes.length }} {{ filteredEpisodes.length === 1 ? 'episode' : 'episodes' }} found</small>
+    </p>
+
     <div v-if="loading">
       <p>Loading episodes...</p>
     </div>
@@ -102,6 +103,7 @@ const handlePlay = (episode: Episode) => {
           :key="episode.guid"
           :episode="episode"
           :show-artwork="showArtwork"
+          :hide-artwork="hideArtwork"
           @play="handlePlay"
         />
       </div>

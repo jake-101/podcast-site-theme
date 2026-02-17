@@ -7,6 +7,7 @@ export default defineAppConfig({
       rss: 'https://podnews.net/rss',
     },
     episodesPerPage: 18,
+    hideArtwork: true,
     theme: 'auto',
   },
 })

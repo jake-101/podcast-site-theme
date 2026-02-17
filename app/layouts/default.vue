@@ -1,6 +1,13 @@
 <script setup lang="ts">
 const appConfig = useAppConfig()
 const { podcast } = usePodcast()
+const route = useRoute()
+
+// Search state — shared with EpisodeGrid
+const { searchInput, query: searchQuery, clear: clearSearch } = useEpisodeSearch()
+
+// Only show search in nav on the home page
+const isHomePage = computed(() => route.path === '/')
 
 // Dark mode support using VueUse
 const colorMode = useColorMode({
@@ -52,14 +59,43 @@ useHead({
 
 <template>
   <div class="podcast-layout">
-    <!-- Header with dark mode toggle -->
+    <!-- Header with optional nav search and dark mode toggle -->
     <header class="site-header">
       <div class="container">
         <nav class="site-nav">
           <NuxtLink to="/" class="site-logo">
-            <h1>{{ podcast?.title || appConfig.podcast.siteTitle || 'Podcast' }}</h1>
+            <img
+              v-if="appConfig.podcast.navLogo === 'image' && podcast?.artwork"
+              :src="podcast.artwork"
+              :alt="podcast.title"
+              class="site-logo__image"
+            />
+            <h1 v-else>{{ podcast?.title || appConfig.podcast.siteTitle || 'Podcast' }}</h1>
           </NuxtLink>
-          
+
+          <!-- Search input (home page only) -->
+          <div v-if="isHomePage" class="site-nav__search">
+            <div class="site-nav__search-wrap">
+              <Icon name="ph:magnifying-glass" size="16" class="site-nav__search-icon" />
+              <input
+                v-model="searchInput"
+                type="search"
+                placeholder="Search episodes..."
+                aria-label="Search episodes"
+                class="site-nav__search-input"
+              />
+              <button
+                v-if="searchInput"
+                type="button"
+                class="site-nav__search-clear"
+                aria-label="Clear search"
+                @click="clearSearch"
+              >
+                <Icon name="ph:x" size="14" />
+              </button>
+            </div>
+          </div>
+
           <button 
             class="theme-toggle"
             type="button"
@@ -98,10 +134,7 @@ useHead({
 .site-header {
   background-color: var(--primary);
   color: var(--primary-foreground);
-  padding: 1rem 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  padding: 0.75rem 0;
 }
 
 .site-nav {
@@ -120,6 +153,76 @@ useHead({
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+.site-logo__image {
+  display: block;
+  height: 2.5rem;
+  width: auto;
+  border-radius: 0.375rem;
+  object-fit: contain;
+}
+
+.site-nav__search {
+  flex: 1;
+  max-width: 420px;
+}
+
+.site-nav__search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.site-nav__search-icon {
+  position: absolute;
+  left: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+.site-nav__search-input {
+  width: 100%;
+  padding: 0.45rem 2.25rem 0.45rem 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.375rem;
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  outline: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.site-nav__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.site-nav__search-input:focus {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Hide the browser's native search cancel button */
+.site-nav__search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.site-nav__search-clear {
+  all: unset;
+  position: absolute;
+  right: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 0.25rem;
+  transition: color 0.2s;
+}
+
+.site-nav__search-clear:hover {
+  color: var(--primary-foreground);
 }
 
 .theme-toggle {
@@ -155,11 +258,22 @@ useHead({
   .podcast-layout {
     padding-bottom: 120px; /* More space on mobile */
   }
-  
+
+  .site-nav {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
   .site-logo h1 {
     font-size: 1.25rem;
   }
-  
+
+  .site-nav__search {
+    order: 3;
+    max-width: 100%;
+    width: 100%;
+  }
+
   .main-content {
     padding: 1rem 0;
   }

@@ -63,10 +63,20 @@ useHead({
 
     <!-- Main content -->
     <template v-else-if="podcast">
-      <!-- Hero section with podcast info and subscribe buttons -->
-      <PodcastHero 
-        :podcast="podcast" 
+      <!-- Hero section: podcast overview or featured latest episode -->
+      <FeaturedEpisodeHero
+        v-if="appConfig.podcast.heroType === 'featured' && episodes.length > 0"
+        :episode="episodes[0]"
+        :podcast="podcast"
         :platforms="appConfig.podcast.platforms"
+        :hide-artwork="appConfig.podcast.hideArtwork"
+        @play="handlePlayEpisode"
+      />
+      <PodcastHero
+        v-else
+        :podcast="podcast"
+        :platforms="appConfig.podcast.platforms"
+        :hide-artwork="appConfig.podcast.hideArtwork"
       />
 
       <!-- Episode grid with search and pagination -->
@@ -76,6 +86,7 @@ useHead({
             :episodes="episodes"
             :episodes-per-page="appConfig.podcast.episodesPerPage"
             :show-artwork="podcast.artwork"
+            :hide-artwork="appConfig.podcast.hideArtwork"
             @play="handlePlayEpisode"
           />
         </section>
