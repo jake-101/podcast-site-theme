@@ -1,10 +1,11 @@
 export default defineAppConfig({
   podcast: {
-    feedUrl: 'https://feeds.transistor.fm/what-the-hack-podcast',
-    siteTitle: 'What The Hack',
+    feedUrl: 'https://feed.syntax.fm/',
+    siteTitle: 'Syntax',
     platforms: {
-      apple: 'https://podcasts.apple.com/podcast/what-the-hack/id1574563893',
-      rss: 'https://feeds.transistor.fm/what-the-hack-podcast',
+      spotify: 'https://open.spotify.com/show/4kYCRYJ3yK5DQbP5tbfZby',
+      apple: 'https://podcasts.apple.com/podcast/syntax-tasty-web-development-treats/id1253186678',
+      rss: 'https://feed.syntax.fm/',
     },
     episodesPerPage: 18,
     heroType: 'featured',
