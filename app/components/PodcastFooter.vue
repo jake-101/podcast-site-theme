@@ -83,7 +83,7 @@ function getPlatformIcon(key: string) {
           <span v-if="rssUrl">&nbsp;&middot;&nbsp;<a :href="rssUrl" target="_blank" rel="noopener">RSS Feed</a></span>
         </p>
         <p>
-          Powered by <a href="https://github.com/yourusername/nuxt-podcast-theme" target="_blank" rel="noopener">nuxt-podcast-theme</a>
+          Powered by <a href="https://github.com/jake-101/nuxt-theme-podcast" target="_blank" rel="noopener">nuxt-podcast-theme</a>
         </p>
       </div>
     </div>
