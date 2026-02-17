@@ -287,6 +287,19 @@ useHead({
       </div>
     </section>
 
+    <!-- Original episode link -->
+    <div v-if="episode.link" class="episode-source-link">
+      <a
+        :href="episode.link"
+        target="_blank"
+        rel="noopener"
+        class="original-link-btn"
+      >
+        <Icon name="ph:arrow-square-out" size="16" />
+        View original episode page
+      </a>
+    </div>
+
     <!-- Podcasting 2.0 features (funding, contributors) -->
     <section v-if="episode.podcast2?.funding?.length || episode.podcast2?.persons?.length" class="podcast20-features">
       <!-- Funding/support links -->
@@ -348,17 +361,6 @@ useHead({
       </div>
     </section>
 
-    <!-- Original episode link -->
-    <section v-if="episode.link" class="episode-footer">
-      <a 
-        :href="episode.link" 
-        target="_blank" 
-        rel="noopener"
-        class="original-link"
-      >
-        View original episode page →
-      </a>
-    </section>
     </div>
   </div>
 
@@ -746,15 +748,28 @@ useHead({
   text-transform: capitalize;
 }
 
-.episode-footer {
-  text-align: center;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border);
+.episode-source-link {
+  margin-bottom: 2rem;
 }
 
-.original-link {
-  color: var(--primary, #2563eb);
-  text-decoration: underline;
+.original-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-medium);
+  background-color: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.original-link-btn:hover {
+  background-color: var(--muted);
+  border-color: var(--primary);
 }
 
 .episode-not-found {
