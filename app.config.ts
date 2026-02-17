@@ -40,6 +40,9 @@ export default defineAppConfig({
     // Theme: 'light', 'dark', or 'auto'
     theme: 'auto',
 
+    // Transcript timestamp offset in seconds (for podcasts with intros not in transcript)
+    transcriptOffset: 0,
+
     // Newsletter signup (optional)
     newsletter: {
       // Email platform: 'beehiiv' | 'substack' | 'mailchimp' | 'kit'

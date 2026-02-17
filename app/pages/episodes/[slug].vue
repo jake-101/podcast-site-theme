@@ -11,6 +11,8 @@ const slug = computed(() => route.params.slug as string)
 
 // Fetch podcast metadata + single full episode in one batched call.
 // Only this one episode's data enters the SSG payload.
+// Transcript is also fetched here (if available) so it gets serialized
+// into _payload.json for static builds — avoids CORS issues on the client.
 const { data, status, error } = await useAsyncData(
   `episode-${slug.value}`,
   async (_nuxtApp, { signal }) => {
@@ -18,7 +20,25 @@ const { data, status, error } = await useAsyncData(
       $fetch<Podcast>('/api/podcast/meta', { signal }),
       $fetch<Episode>(`/api/podcast/episodes/${slug.value}`, { signal }),
     ])
-    return { meta, episode }
+
+    // Fetch transcript if available (during SSR/prerender, this gets serialized into payload)
+    let transcript: { content: string; type: string; url: string } | null = null
+    if (episode.podcast2?.transcript?.url) {
+      try {
+        transcript = await $fetch('/api/transcript', {
+          query: {
+            url: episode.podcast2.transcript.url,
+            type: episode.podcast2.transcript.type,
+          },
+          signal,
+        })
+      } catch (e) {
+        // Transcript fetch failure shouldn't block the page
+        console.warn('Failed to fetch transcript:', e)
+      }
+    }
+
+    return { meta, episode, transcript }
   },
 )
 
@@ -320,7 +340,7 @@ useHead({
 
       <!-- Transcript tab -->
       <div v-if="hasTranscript" v-show="activeTab === 'transcript'" class="tab-panel">
-        <TranscriptViewer :episode="episode" />
+        <TranscriptViewer :episode="episode" :transcript-data="data?.transcript" />
       </div>
     </Motion>
 

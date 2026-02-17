@@ -49,6 +49,19 @@ export interface PodcastConfig {
   funding: FundingLinks
   episodesPerPage: number
   theme: 'light' | 'dark' | 'auto'
+  /**
+   * Offset in seconds to add to transcript timestamps when seeking in the audio player.
+   * Use this when the podcast has an intro segment that isn't accounted for in the
+   * transcript (e.g., the transcript assumes t=0 is the start of main content, but the
+   * audio file has a 30-second intro before that).
+   *
+   * - Positive value: transcript timestamps are behind the audio (intro before content)
+   * - Negative value: transcript timestamps are ahead of the audio
+   * - Default: 0 (no offset)
+   *
+   * Future: could be auto-detected from podcast:chapters data if available.
+   */
+  transcriptOffset?: number
 }
 
 /**

@@ -4,32 +4,24 @@ import type { TranscriptCue, ParsedTranscript } from '~/utils/transcript'
 
 const props = defineProps<{
   episode: Episode
+  /** Pre-fetched transcript data from the episode page's useAsyncData.
+   *  This is serialized into the SSG payload so it works without a running server. */
+  transcriptData?: { content: string; type: string; url: string } | null
 }>()
 
 const player = useAudioPlayer()
 
-// Fetch transcript from server
-const transcriptUrl = computed(() => props.episode.podcast2?.transcript?.url)
-const transcriptType = computed(() => props.episode.podcast2?.transcript?.type)
+// Transcript offset: shifts seek targets to account for podcast intros not in the transcript.
+// When offset > 0, the audio has an intro that the transcript doesn't include,
+// so we ADD the offset when seeking and SUBTRACT it when finding the active cue.
+const appConfig = useAppConfig()
+const transcriptOffset = computed(() => (appConfig.podcast as any)?.transcriptOffset ?? 0)
 
-const { data: transcriptData, status, error, refresh } = useFetch('/api/transcript', {
-  query: {
-    url: transcriptUrl,
-    type: transcriptType,
-  },
-  // Only fetch when we actually have a transcript URL
-  immediate: !!transcriptUrl.value,
-  // Never re-fetch on the client — the server proxy handles the external fetch
-  // to avoid CORS issues when the client tries to reach the transcript host directly
-  server: true,
-  watch: false,
-})
-
-// Parse the transcript content
+// Parse the transcript content from the pre-fetched prop data
 const parsedTranscript = computed<ParsedTranscript | null>(() => {
-  if (status.value !== 'success' || !transcriptData.value) return null
+  if (!props.transcriptData) return null
 
-  const { content, type } = transcriptData.value as { content: string; type: string; url: string }
+  const { content, type } = props.transcriptData
   return parseTranscript(content, type, props.episode.duration)
 })
 
@@ -76,7 +68,10 @@ const isCurrentEpisode = computed(() =>
 
 const activeCueIndex = computed(() => {
   if (!isCurrentEpisode.value || !parsedTranscript.value?.cues.length) return -1
-  return findActiveCueIndex(parsedTranscript.value.cues, player.currentTime.value)
+  // Subtract the offset from the audio's currentTime to align with transcript timestamps.
+  // If offset=30, audio time 45s maps to transcript time 15s.
+  const adjustedTime = player.currentTime.value - transcriptOffset.value
+  return findActiveCueIndex(parsedTranscript.value.cues, adjustedTime)
 })
 
 // Auto-scroll
@@ -122,17 +117,20 @@ watch(activeCueIndex, (newIndex) => {
   })
 })
 
-// Click to seek
+// Click to seek — add the transcript offset so the audio seeks to the right position.
+// If offset=30 and cue.startTime=15, we seek to audio time 45s.
 const seekToCue = (cue: TranscriptCue) => {
   if (!hasTimedCues.value) return
+
+  const seekTarget = cue.startTime + transcriptOffset.value
 
   if (!isCurrentEpisode.value) {
     // Load and play the episode first, then seek
     player.play(props.episode).then(() => {
-      player.seek(cue.startTime)
+      player.seek(seekTarget)
     })
   } else {
-    player.seek(cue.startTime)
+    player.seek(seekTarget)
   }
 }
 
@@ -154,21 +152,12 @@ onUnmounted(() => {
 
 <template>
   <div class="transcript-viewer">
-    <!-- Loading state -->
-    <div v-if="status === 'pending'" class="transcript-loading">
-      <div class="loading-spinner" />
-      <p>Loading transcript...</p>
+    <!-- No data state -->
+    <div v-if="!transcriptData" class="transcript-empty">
+      <p>Transcript unavailable.</p>
     </div>
 
-    <!-- Error state -->
-    <div v-else-if="error" class="transcript-error">
-      <p>Unable to load transcript.</p>
-      <button type="button" class="retry-button" @click="refresh()">
-        Try again
-      </button>
-    </div>
-
-    <!-- Empty state -->
+    <!-- Empty parsed state -->
     <div v-else-if="parsedTranscript && parsedTranscript.cues.length === 0" class="transcript-empty">
       <p>No transcript content found.</p>
     </div>
@@ -277,55 +266,6 @@ function escapeHtml(str: string): string {
 <style scoped>
 .transcript-viewer {
   width: 100%;
-}
-
-/* Loading */
-.transcript-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 3rem 1rem;
-  color: var(--muted-foreground);
-}
-
-.loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Error */
-.transcript-error {
-  text-align: center;
-  padding: 2rem 1rem;
-  color: var(--muted-foreground);
-}
-
-.retry-button {
-  all: unset;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.retry-button:hover {
-  background-color: var(--muted);
 }
 
 /* Empty */
