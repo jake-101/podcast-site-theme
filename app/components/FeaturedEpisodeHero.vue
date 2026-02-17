@@ -5,7 +5,6 @@ interface Props {
   episode: Episode
   podcast: Podcast
   platforms?: PlatformLinks
-  hideArtwork?: boolean
 }
 
 const props = defineProps<Props>()
@@ -55,7 +54,7 @@ const handlePlay = () => {
 <template>
   <header class="featured-hero">
     <div class="featured-hero__inner container">
-      <div v-if="!hideArtwork" class="featured-hero__artwork">
+      <div class="featured-hero__artwork">
         <NuxtImg
           :src="artwork"
           :alt="`${episode.title} artwork`"
@@ -243,12 +242,6 @@ const handlePlay = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.625rem;
-}
-
-/* When artwork is hidden, use single column */
-.featured-hero__inner:not(:has(.featured-hero__artwork)) {
-  grid-template-columns: 1fr;
-  max-width: 800px;
 }
 
 @media (max-width: 768px) {

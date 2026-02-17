@@ -4,7 +4,6 @@ import type { Podcast, PlatformLinks } from '~/types/podcast'
 interface Props {
   podcast: Podcast
   platforms?: PlatformLinks
-  hideArtwork?: boolean
 }
 
 const props = defineProps<Props>()
@@ -17,7 +16,7 @@ const platformEntries = computed(() => {
 
 <template>
   <header class="podcast-hero">
-    <div v-if="!hideArtwork" class="podcast-hero__artwork">
+    <div class="podcast-hero__artwork">
       <NuxtImg :src="podcast.artwork" :alt="`${podcast.title} artwork`" width="400" height="400" loading="eager" />
     </div>
 

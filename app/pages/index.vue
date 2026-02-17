@@ -69,14 +69,12 @@ useHead({
         :episode="episodes[0]"
         :podcast="podcast"
         :platforms="appConfig.podcast.platforms"
-        :hide-artwork="appConfig.podcast.hideArtwork"
         @play="handlePlayEpisode"
       />
       <PodcastHero
         v-else
         :podcast="podcast"
         :platforms="appConfig.podcast.platforms"
-        :hide-artwork="appConfig.podcast.hideArtwork"
       />
 
       <!-- Episode grid with search and pagination -->
