@@ -19,13 +19,13 @@ function parseDuration(duration: string | number | undefined): number {
   
   if (parts.length === 3) {
     // HH:MM:SS
-    return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0)
   } else if (parts.length === 2) {
     // MM:SS
-    return parts[0] * 60 + parts[1]
+    return (parts[0] || 0) * 60 + (parts[1] || 0)
   } else if (parts.length === 1) {
     // Just seconds
-    return parts[0]
+    return parts[0] || 0
   }
   
   return 0
@@ -143,6 +143,29 @@ function parsePodcast2Tags(item: any): Podcast2Tags | undefined {
 }
 
 /**
+ * Make relative links absolute in HTML content
+ * Uses the podcast's base URL to resolve links starting with /
+ */
+function makeLinksAbsolute(html: string | undefined, baseUrl: string | undefined): string {
+  if (!html) return ''
+  if (!baseUrl) return html
+  
+  try {
+    const url = new URL(baseUrl)
+    const origin = url.origin
+    
+    // Replace href="/..." with href="https://domain.com/..."
+    // but not href="//..." (protocol-relative)
+    return html.replace(/href=["']\/(?!\/)(.*?)["']/g, (match, path) => {
+      return `href="${origin}/${path}"`
+    })
+  } catch (e) {
+    // If baseUrl is invalid, return original html
+    return html
+  }
+}
+
+/**
  * Parse podcast RSS feed from XML string
  */
 export async function parsePodcastFeed(feedUrl: string): Promise<PodcastFeed> {
@@ -211,6 +234,9 @@ export async function parsePodcastFeed(feedUrl: string): Promise<PodcastFeed> {
   const items = Array.isArray(channel.item) ? channel.item : [channel.item]
   const episodes: Episode[] = []
   
+  // Use podcast link as base for relative URLs in descriptions/show notes
+  const baseUrl = podcast.link || feedUrl
+  
   for (const item of items) {
     if (!item) continue
     
@@ -248,8 +274,8 @@ export async function parsePodcastFeed(feedUrl: string): Promise<PodcastFeed> {
       guid: item.guid?.['#text'] || item.guid || audioUrl,
       title,
       slug: generateSlug(title, episodeNumber),
-      description: String(item['itunes:summary'] || item.description || ''),
-      htmlContent: item['content:encoded'],
+      description: makeLinksAbsolute(String(item['itunes:summary'] || item.description || ''), baseUrl),
+      htmlContent: makeLinksAbsolute(item['content:encoded'], baseUrl),
       audioUrl,
       audioType: enclosure['@_type'] || enclosure.type || 'audio/mpeg',
       audioLength: parseInt(enclosure['@_length'] || enclosure.length || '0', 10),
