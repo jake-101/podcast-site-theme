@@ -34,6 +34,34 @@ export function formatDuration(seconds: number): string {
 }
 
 /**
+ * Format duration in seconds to friendly human-readable format
+ * @param seconds - Duration in seconds
+ * @returns Formatted duration string (e.g., "1hr 30min", "45sec", "1min 30sec")
+ */
+export function formatDurationFriendly(seconds: number): string {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+  
+  if (hours > 0) {
+    // >= 1 hour: show "XXhr" or "XXhr XXmin"
+    if (minutes > 0) {
+      return `${hours}hr ${minutes}min`
+    }
+    return `${hours}hr`
+  } else if (minutes > 0) {
+    // >= 1 minute, < 1 hour: show "XXmin" or "XXmin XXsec"
+    if (secs > 0) {
+      return `${minutes}min ${secs}sec`
+    }
+    return `${minutes}min`
+  } else {
+    // < 1 minute: show "XXsec"
+    return `${secs}sec`
+  }
+}
+
+/**
  * Parse duration string into seconds
  * Handles HH:MM:SS, MM:SS, or plain seconds
  * @param input - Duration string or number

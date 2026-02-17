@@ -30,17 +30,9 @@ const formattedDate = computed(() => {
   })
 })
 
-// Format duration from seconds to HH:MM:SS or MM:SS
+// Format duration in friendly format (e.g., "1hr 30min")
 const formattedDuration = computed(() => {
-  const seconds = props.episode.duration
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = Math.floor(seconds % 60)
-  
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-  }
-  return `${minutes}:${String(secs).padStart(2, '0')}`
+  return formatDurationFriendly(props.episode.duration)
 })
 
 // Strip HTML tags and truncate description to ~150 characters

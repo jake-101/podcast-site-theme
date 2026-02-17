@@ -222,7 +222,7 @@ useHead({
           
           <span class="episode-duration-display">
             <Icon name="ph:clock" size="16" />
-            {{ formatDuration(episode.duration) }}
+            {{ formatDurationFriendly(episode.duration) }}
           </span>
         </div>
 
