@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nuxi dev playground",
-    "build": "nuxi build playground",
-    "generate": "nuxi prepare && nuxi generate playground",
+    "build": "nuxi prepare && nuxi build playground --config playground/nuxt.config.server.ts",
+    "build:edge": "nuxi prepare && nuxi build playground --config playground/nuxt.config.edge.ts",
+    "generate": "nuxi prepare && nuxi generate playground --config playground/nuxt.config.static.ts",
     "preview": "nuxi preview playground",
     "deploy": "pnpm run generate && wrangler pages deploy playground/.output/public",
     "start": "node playground/.output/server/index.mjs",

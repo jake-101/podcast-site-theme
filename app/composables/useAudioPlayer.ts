@@ -8,6 +8,7 @@ import type { Episode, EpisodeSummary } from '~/types/podcast'
 /** Lightweight read of listening progress from localStorage (no dependency on useListeningProgress) */
 interface StoredProgress { position: number; duration: number; lastUpdated: number }
 const PROGRESS_KEY = 'podcast-listening-progress'
+const LAST_EPISODE_KEY = 'podcast-last-episode'
 
 /** Episode data the player needs — works with both full Episode and lightweight EpisodeSummary */
 type PlayableEpisode = Episode | EpisodeSummary
@@ -144,6 +145,14 @@ export function useAudioPlayer() {
     })
 
     state.value.currentEpisode = episode
+
+    // Persist last-played episode so it can be restored on next page load
+    try {
+      localStorage.setItem(LAST_EPISODE_KEY, JSON.stringify(episode))
+    } catch {
+      // localStorage write failed — not critical
+    }
+
     howl.play()
   }
 
