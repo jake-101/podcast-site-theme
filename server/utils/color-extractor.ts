@@ -1,14 +1,13 @@
 import { extractColors } from 'extract-colors'
+import { getPixels } from '@unpic/pixels'
 import type { ExtractedColor } from '../../types/theme'
 
 /**
  * Fetch artwork image and extract dominant colors server-side.
  *
- * extract-colors works with raw pixel data. We fetch the image,
- * decode it to RGBA pixels, and feed that to the library.
- *
- * For Node.js we decode JPEG/PNG using the built-in sharp (if available)
- * or fall back to manual pixel extraction from the raw fetch.
+ * @unpic/pixels decodes JPEG/PNG to raw RGBA pixels using pure JS
+ * (jpeg-js + pngjs), so it works on Node.js, Cloudflare Workers,
+ * and any edge runtime without native binaries.
  */
 export async function extractArtworkColors(artworkUrl: string): Promise<ExtractedColor[]> {
   if (!artworkUrl) {
@@ -27,36 +26,18 @@ export async function extractArtworkColors(artworkUrl: string): Promise<Extracte
     }
 
     const arrayBuffer = await response.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
 
-    // Use sharp to decode image to raw RGBA pixels
-    // sharp is commonly available in Node.js environments
-    let pixels: Uint8ClampedArray
-    let width: number
-    let height: number
+    // Decode JPEG/PNG to raw RGBA pixels — pure JS, no native deps
+    const imageData = await getPixels(new Uint8Array(arrayBuffer))
 
-    try {
-      // Dynamic import with a string expression prevents Nitro/Rollup from
-      // attempting to bundle sharp at build time on edge runtimes.
-      const sharpPkg = 'sharp'
-      const sharp = (await import(/* @vite-ignore */ sharpPkg)).default
-      // Resize to small dimensions for faster color extraction
-      const image = sharp(buffer).resize(64, 64, { fit: 'cover' })
-      const { data, info } = await image.raw().ensureAlpha().toBuffer({ resolveWithObject: true })
-
-      pixels = new Uint8ClampedArray(data)
-      width = info.width
-      height = info.height
-    } catch {
-      // sharp not available (e.g. Cloudflare edge runtime) — use fallback
-      console.warn('sharp not available, using fallback color extraction')
-      return extractFallbackColors(buffer)
-    }
+    const pixels = new Uint8ClampedArray(imageData.data)
+    const width = imageData.width
+    const height = imageData.height
 
     // Extract colors from raw pixel data
     const colors = await extractColors({ data: pixels, width, height }, {
       pixels: width * height,
-      distance: 0.15, // Minimum distance between colors (0-1)
+      distance: 0.15,
       saturationDistance: 0.2,
       lightnessDistance: 0.2,
       hueDistance: 0.05,
@@ -75,21 +56,4 @@ export async function extractArtworkColors(artworkUrl: string): Promise<Extracte
     console.error('Color extraction failed:', error)
     return []
   }
-}
-
-/**
- * Fallback: parse a few bytes to guess a dominant color when sharp is unavailable.
- * This is intentionally rough - most production Nitro environments have sharp.
- */
-function extractFallbackColors(_buffer: Buffer): ExtractedColor[] {
-  // Return a default accent color so the theme still works
-  return [{
-    hex: '#574747',
-    red: 87,
-    green: 71,
-    blue: 71,
-    area: 1,
-    saturation: 0.1,
-    lightness: 0.31,
-  }]
 }
