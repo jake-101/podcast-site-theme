@@ -12,6 +12,7 @@ All feeds verified working as of Feb 2026.
 | **The Rewatchables** | `https://feeds.megaphone.fm/the-rewatchables` | Megaphone | 446+ | content:encoded, trailer episode |
 | **99% Invisible** | `https://feeds.simplecast.com/jn7O6Fnt` | Simplecast | 774+ | 88 bonus + 1 trailer episodes, episode numbers, keywords |
 | **Acquired** | `https://feeds.transistor.fm/acquired` | Transistor | 212+ | podcast:person (424 tags), seasons, episode numbers, keywords, 24 bonus + 1 trailer, podcast:guid |
+| **What The Hack** | `https://feeds.transistor.fm/what-the-hack-podcast` | Transistor | 17+ | **podcast:person with unique guests per episode** (88 tags, 1 host + many guests), podcast:guid |
 | **70mm** | `https://feeds.transistor.fm/70mm` | Transistor | 349+ | **podcast:chapters (346 eps)**, podcast:transcript (10 eps), podcast:funding, episode numbers, keywords, 49 bonus + 1 trailer |
 
 ## Additional Test Feeds
@@ -60,7 +61,7 @@ Adoption of Podcasting 2.0 namespace tags is limited among mainstream podcasts. 
 |-----|---------------------|
 | **`podcast:transcript`** | Podnews Daily (150 episodes), 70mm (10 episodes) |
 | **`podcast:chapters`** | 70mm (346 episodes) |
-| **`podcast:person`** | Acquired (424 tags), Podnews Daily (1) |
+| **`podcast:person`** | Acquired (424 tags, hosts only), What The Hack (88 tags, unique guests per ep), Podnews Daily (1) |
 | **`podcast:funding`** | Podnews Daily (1), 70mm (1) |
 | **`podcast:guid`** | Acquired, Lex Fridman, Podnews Daily, Pod Save America, 70mm |
 | **`podcast:location`** | Podnews Daily (23) |
