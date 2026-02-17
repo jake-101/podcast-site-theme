@@ -37,14 +37,22 @@ export function parseTimestamp(timestamp: string): number {
 export function linkifyTimestamps(html: string, linkClass = 'timestamp-link'): string {
   if (!html) return ''
 
-  // Split on existing <a ...>...</a> tags so we never linkify timestamps
-  // that are already inside an anchor (e.g. Syntax.fm wraps them already).
-  const parts = html.split(/(<a[\s\S]*?<\/a>)/gi)
+  // First, convert pre-existing timestamp anchors (e.g. Syntax.fm uses
+  // <a href="#t=00:00">00:00</a>) into our timestamp-link format so they
+  // get the same badge styling and click handler.
+  const preLinkedPattern = /<a\s[^>]*href=["']#t=(\d{1,2}:\d{2}(?::\d{2})?)["'][^>]*>(\d{1,2}:\d{2}(?::\d{2})?)<\/a>/gi
+  let result = html.replace(preLinkedPattern, (_match, hrefTime, labelTime) => {
+    const timestamp = hrefTime || labelTime
+    const seconds = parseTimestamp(timestamp)
+    return `<a href="#" class="${linkClass}" data-timestamp="${seconds}" onclick="return false;">${labelTime}</a>`
+  })
 
+  // Then linkify any remaining bare timestamps, skipping existing anchors.
+  const parts = result.split(/(<a[\s\S]*?<\/a>)/gi)
   const timestampPattern = /(\b|\s|>|\[)(\d{1,2}:\d{2}(?::\d{2})?)(\b|\s|<|\])/g
 
   return parts.map((part, i) => {
-    // Odd-indexed parts are the matched <a>…</a> blocks — leave untouched
+    // Odd-indexed parts are existing <a>…</a> blocks — leave untouched
     if (i % 2 === 1) return part
 
     return part.replace(timestampPattern, (match, before, timestamp, after) => {
