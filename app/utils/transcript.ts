@@ -97,8 +97,8 @@ export function parseSRT(content: string): ParsedTranscript {
       }
     }
 
-    // Strip HTML tags from text
-    text = text.replace(/<[^>]+>/g, '').trim()
+    // Strip HTML tags and decode entities
+    text = decodeHtmlEntities(text.replace(/<[^>]+>/g, '')).trim()
 
     if (text) {
       cues.push({ startTime, endTime, text, speaker })
@@ -166,8 +166,8 @@ export function parseVTT(content: string): ParsedTranscript {
       text = vTagMatch[2].trim()
     }
 
-    // Strip VTT formatting tags (<b>, <i>, <c>, etc.)
-    text = text.replace(/<[^>]+>/g, '').trim()
+    // Strip VTT formatting tags and decode entities
+    text = decodeHtmlEntities(text.replace(/<[^>]+>/g, '')).trim()
 
     if (text) {
       cues.push({ startTime, endTime, text, speaker })
@@ -205,7 +205,7 @@ export function parseJSONTranscript(content: string): ParsedTranscript {
     for (const seg of segments) {
       const startTime = typeof seg.startTime === 'number' ? seg.startTime : parseFloat(seg.startTime || '0')
       const endTime = typeof seg.endTime === 'number' ? seg.endTime : parseFloat(seg.endTime || '0')
-      const text = (seg.body || seg.text || seg.content || '').trim()
+      const text = decodeHtmlEntities((seg.body || seg.text || seg.content || '').trim())
       const speaker = seg.speaker || seg.name || undefined
 
       if (text && !isNaN(startTime)) {
@@ -246,7 +246,7 @@ export function parsePlainText(content: string, totalDuration?: number): ParsedT
   let currentTime = 0
 
   for (const paragraph of paragraphs) {
-    const text = paragraph.trim().replace(/\n/g, ' ')
+    const text = decodeHtmlEntities(paragraph.trim().replace(/\n/g, ' '))
     if (!text) continue
 
     // Extract speaker if format is "Speaker: text"
@@ -274,23 +274,93 @@ export function parsePlainText(content: string, totalDuration?: number): ParsedT
 }
 
 /**
- * Parse HTML transcript
- * Extracts text content and tries to find timing data
+ * Decode HTML entities (named and numeric) in a string.
+ * Handles &#39; &#x27; &amp; &ndash; &mdash; &rsquo; etc.
  */
-export function parseHTMLTranscript(content: string): ParsedTranscript {
-  // Strip all HTML tags but try to preserve structure
-  const text = content
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+export function decodeHtmlEntities(str: string): string {
+  return str
+    // Numeric decimal entities: &#39; &#169; etc.
+    .replace(/&#(\d+);/g, (_match, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    // Numeric hex entities: &#x27; &#xA9; etc.
+    .replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    // Named entities — common ones used in transcript content
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, '\'')
+    .replace(/&ndash;/g, '\u2013')
+    .replace(/&mdash;/g, '\u2014')
+    .replace(/&lsquo;/g, '\u2018')
+    .replace(/&rsquo;/g, '\u2019')
+    .replace(/&ldquo;/g, '\u201C')
+    .replace(/&rdquo;/g, '\u201D')
+    .replace(/&hellip;/g, '\u2026')
+    .replace(/&bull;/g, '\u2022')
+    .replace(/&copy;/g, '\u00A9')
+    .replace(/&reg;/g, '\u00AE')
+    .replace(/&trade;/g, '\u2122')
+}
 
-  return parsePlainText(text)
+/**
+ * Parse HTML transcript
+ * Extracts text content, decodes HTML entities, and extracts speakers
+ * from <cite> tags (used by Changelog and similar feeds).
+ */
+export function parseHTMLTranscript(content: string): ParsedTranscript {
+  const cues: TranscriptCue[] = []
+
+  // Check for <cite>Speaker:</cite><p>text</p> pattern (Changelog-style)
+  const citePattern = /<cite>\s*(.*?)\s*:?\s*<\/cite>\s*<p>([\s\S]*?)<\/p>/gi
+  let match
+  let hasCiteBlocks = false
+
+  while ((match = citePattern.exec(content)) !== null) {
+    hasCiteBlocks = true
+    const speaker = decodeHtmlEntities(match[1].trim())
+    let text = match[2]
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .trim()
+    text = decodeHtmlEntities(text)
+
+    // Skip empty paragraphs (e.g., "Break:" with empty <p></p>)
+    if (!text || speaker.toLowerCase() === 'break') continue
+
+    cues.push({
+      startTime: 0,
+      endTime: 0,
+      text,
+      speaker: speaker || undefined,
+    })
+  }
+
+  // If we found cite blocks, estimate timing and return
+  if (hasCiteBlocks && cues.length > 0) {
+    const totalChars = cues.reduce((sum, c) => sum + c.text.length, 0)
+    const avgDuration = 30 // ~30s per segment as estimate
+    const totalDuration = cues.length * avgDuration
+    let currentTime = 0
+
+    for (const cue of cues) {
+      const segDuration = (cue.text.length / totalChars) * totalDuration
+      cue.startTime = currentTime
+      cue.endTime = currentTime + segDuration
+      currentTime += segDuration
+    }
+
+    return { cues, format: 'html' }
+  }
+
+  // Fallback: strip all HTML tags, decode entities, feed to plain text parser
+  const text = content
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+
+  return parsePlainText(decodeHtmlEntities(text))
 }
 
 /**
