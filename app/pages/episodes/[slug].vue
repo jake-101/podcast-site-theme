@@ -558,7 +558,7 @@ useHead({
 .episode-description {
   margin-bottom: 2rem;
   padding: 1rem;
-  background-color: var(--bg-alt, #f9fafb);
+  background-color: var(--muted);
   border-radius: 0.5rem;
 }
 
@@ -574,11 +574,11 @@ useHead({
 
 .keyword-tag {
   padding: 0.25rem 0.75rem;
-  background-color: var(--bg-alt, #f3f4f6);
+  background-color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 1rem;
   font-size: 0.875rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--muted-foreground);
 }
 
 /* ── Content Tabs ── */
@@ -647,7 +647,7 @@ useHead({
 .podcast20-features {
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background-color: var(--bg-alt, #f9fafb);
+  background-color: var(--muted);
   border-radius: 0.5rem;
 }
 
