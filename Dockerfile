@@ -25,12 +25,17 @@ RUN pnpm build
 
 # ---
 
-# Production stage — serve static output with nginx
-FROM nginx:alpine AS production
+# Production stage — no package manager needed, Nitro output is self-contained
+FROM base AS production
 
-# Copy static files from the Nitro static build output
-COPY --from=build /app/playground/.output/public /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+# Copy only the self-contained Nitro output
+COPY --from=build /app/playground/.output /app/.output
 
-CMD ["nginx", "-g", "daemon off;"]
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
