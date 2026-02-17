@@ -231,7 +231,7 @@ useHead({
         :animate="{ opacity: 1, y: 0 }"
         :transition="{ delay: 0.1, duration: 0.35 }"
       >
-        <div class="episode-actions__left">
+        <div class="episode-actions__play">
           <button
             class="play-button"
             type="button"
@@ -239,9 +239,12 @@ useHead({
           >
             <Icon v-if="isPlaying" name="ph:pause-fill" size="20" />
             <Icon v-else name="ph:play-fill" size="20" />
-            {{ isPlaying ? 'Pause' : 'Play Episode' }}
+            <span class="play-button__label-full">{{ isPlaying ? 'Pause' : 'Play Episode' }}</span>
+            <span class="play-button__label-short">{{ isPlaying ? 'Pause' : 'Play' }}</span>
           </button>
+        </div>
 
+        <div class="episode-actions__meta">
           <span class="episode-meta-item">
             <Icon name="ph:clock" size="15" />
             {{ formatDurationFriendly(episode.duration) }}
@@ -257,16 +260,16 @@ useHead({
             <template v-if="episode.seasonNumber">S{{ episode.seasonNumber }} </template>
             E{{ episode.episodeNumber }}
           </span>
-        </div>
 
-        <ClientOnly>
-          <EpisodeSharePopover
-            :episode-title="episode.title"
-            :episode-slug="episode.slug"
-            :podcast-title="podcast.title"
-            :current-time="isCurrentEpisode ? player.currentTime.value : 0"
-          />
-        </ClientOnly>
+          <ClientOnly>
+            <EpisodeSharePopover
+              :episode-title="episode.title"
+              :episode-slug="episode.slug"
+              :podcast-title="podcast.title"
+              :current-time="isCurrentEpisode ? player.currentTime.value : 0"
+            />
+          </ClientOnly>
+        </div>
       </Motion>
     </Motion>
 
@@ -498,7 +501,6 @@ useHead({
 /* -- Actions + metadata row -- */
 .episode-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: var(--space-4, 1rem);
   flex-wrap: wrap;
@@ -507,11 +509,16 @@ useHead({
   border-top: 1px solid var(--border);
 }
 
-.episode-actions__left {
+.episode-actions__play {
+  flex-shrink: 0;
+}
+
+.episode-actions__meta {
   display: flex;
   align-items: center;
   gap: var(--space-4, 1rem);
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .play-button {
@@ -533,6 +540,11 @@ useHead({
 
 .play-button:hover {
   background-color: color-mix(in srgb, var(--primary), white 25%);
+}
+
+/* Show full label on desktop, short on mobile */
+.play-button__label-short {
+  display: none;
 }
 
 .episode-meta-item {
@@ -830,12 +842,21 @@ useHead({
     gap: var(--space-3, 0.75rem);
   }
 
-  .episode-actions__left {
-    gap: var(--space-3, 0.75rem);
+  /* Short label on mobile */
+  .play-button__label-full {
+    display: none;
+  }
+
+  .play-button__label-short {
+    display: inline;
   }
 
   .play-button {
     padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
+  }
+
+  .episode-actions__meta {
+    gap: var(--space-3, 0.75rem);
   }
 }
 </style>

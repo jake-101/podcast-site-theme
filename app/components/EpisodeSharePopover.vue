@@ -290,4 +290,11 @@ const formattedTime = computed(() => {
   color: var(--foreground);
   border-color: var(--foreground);
 }
+
+/* Mobile: hide text label, icon-only trigger */
+@media (max-width: 768px) {
+  .share-trigger__label {
+    display: none;
+  }
+}
 </style>
