@@ -21,6 +21,11 @@ export function useThemeColors() {
   const { data: themeData, status } = useFetch<ThemeColorsResponse>('/api/podcast/colors', {
     key: 'podcast-theme-colors',
     server: true,
+    // On static sites, read from the SSG payload instead of re-fetching at runtime.
+    // The route is prerendered by nuxi generate — the data is already in the payload.
+    getCachedData(key, nuxtApp) {
+      return nuxtApp.payload.data[key] ?? nuxtApp.static.data[key]
+    },
   })
 
   const isLoaded = computed(() => status.value === 'success' && !!themeData.value)
