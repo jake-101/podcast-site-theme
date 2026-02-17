@@ -101,6 +101,83 @@ describe('formatDuration', () => {
   })
 })
 
+describe('formatDurationFriendly', () => {
+  it('formats 0 seconds', () => {
+    expect(formatDurationFriendly(0)).toBe('0sec')
+  })
+
+  it('formats seconds under a minute', () => {
+    expect(formatDurationFriendly(5)).toBe('5sec')
+    expect(formatDurationFriendly(30)).toBe('30sec')
+    expect(formatDurationFriendly(45)).toBe('45sec')
+    expect(formatDurationFriendly(59)).toBe('59sec')
+  })
+
+  it('formats exact minutes without seconds', () => {
+    expect(formatDurationFriendly(60)).toBe('1min')
+    expect(formatDurationFriendly(120)).toBe('2min')
+    expect(formatDurationFriendly(600)).toBe('10min')
+    expect(formatDurationFriendly(3540)).toBe('59min')
+  })
+
+  it('formats minutes and seconds', () => {
+    expect(formatDurationFriendly(90)).toBe('1min 30sec')
+    expect(formatDurationFriendly(125)).toBe('2min 5sec')
+    expect(formatDurationFriendly(605)).toBe('10min 5sec')
+    expect(formatDurationFriendly(3599)).toBe('59min 59sec')
+  })
+
+  it('formats exact hours without minutes', () => {
+    expect(formatDurationFriendly(3600)).toBe('1hr')
+    expect(formatDurationFriendly(7200)).toBe('2hr')
+    expect(formatDurationFriendly(36000)).toBe('10hr')
+  })
+
+  it('formats hours and minutes without seconds', () => {
+    expect(formatDurationFriendly(3660)).toBe('1hr 1min')
+    expect(formatDurationFriendly(5400)).toBe('1hr 30min')
+    expect(formatDurationFriendly(7260)).toBe('2hr 1min')
+    expect(formatDurationFriendly(9000)).toBe('2hr 30min')
+  })
+
+  it('formats hours and minutes, omitting remaining seconds', () => {
+    expect(formatDurationFriendly(3661)).toBe('1hr 1min')
+    expect(formatDurationFriendly(5425)).toBe('1hr 30min')
+    expect(formatDurationFriendly(7299)).toBe('2hr 1min')
+  })
+
+  it('formats large durations', () => {
+    expect(formatDurationFriendly(86400)).toBe('24hr')
+    expect(formatDurationFriendly(100000)).toBe('27hr 46min')
+    expect(formatDurationFriendly(360000)).toBe('100hr')
+  })
+
+  it('truncates fractional seconds', () => {
+    expect(formatDurationFriendly(45.9)).toBe('45sec')
+    expect(formatDurationFriendly(90.7)).toBe('1min 30sec')
+    expect(formatDurationFriendly(3661.999)).toBe('1hr 1min')
+  })
+
+  it('uses singular forms (hr, min, sec)', () => {
+    // Verify we're using "hr" not "hrs", "min" not "mins", "sec" not "secs"
+    expect(formatDurationFriendly(1)).toBe('1sec')
+    expect(formatDurationFriendly(60)).toBe('1min')
+    expect(formatDurationFriendly(3600)).toBe('1hr')
+    expect(formatDurationFriendly(7200)).toBe('2hr')
+    expect(formatDurationFriendly(120)).toBe('2min')
+    expect(formatDurationFriendly(2)).toBe('2sec')
+  })
+
+  it('handles typical podcast durations', () => {
+    // Common podcast episode lengths
+    expect(formatDurationFriendly(1800)).toBe('30min') // 30 min
+    expect(formatDurationFriendly(2700)).toBe('45min') // 45 min
+    expect(formatDurationFriendly(5400)).toBe('1hr 30min') // 1.5 hours
+    expect(formatDurationFriendly(5411)).toBe('1hr 30min') // 1:30:11 from requirement
+    expect(formatDurationFriendly(10800)).toBe('3hr') // 3 hours
+  })
+})
+
 describe('parseDuration', () => {
   it('returns 0 for undefined input', () => {
     expect(parseDuration(undefined)).toBe(0)
