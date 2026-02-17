@@ -68,17 +68,16 @@ export function useThemeColors() {
 
   /**
    * Remove all custom theme properties (revert to oat.css defaults).
+   * Derives keys from the palette data so it stays in sync with ThemeColors type.
    */
   function clearThemeColors() {
     if (!import.meta.client) return
     const root = document.documentElement
-    const keys: (keyof ThemeColors)[] = [
-      'primary', 'primary-foreground',
-      'secondary', 'secondary-foreground',
-      'accent', 'muted', 'muted-foreground', 'ring',
-      'podcast-vibrant', 'podcast-muted',
-    ]
-    for (const key of keys) {
+    // Use the actual palette keys from the fetched data to avoid hardcoded lists
+    const paletteKeys = themeData.value?.palette
+      ? Object.keys(themeData.value.palette.light) as (keyof ThemeColors)[]
+      : [] as (keyof ThemeColors)[]
+    for (const key of paletteKeys) {
       root.style.removeProperty(`--${key}`)
     }
   }

@@ -247,12 +247,6 @@ useHead({
   flex: 1;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .podcast-layout {

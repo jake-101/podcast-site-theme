@@ -8,22 +8,6 @@ const isDragging = ref(false)
 const dragPosition = ref(0)
 
 /**
- * Format seconds to MM:SS or HH:MM:SS
- */
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || !isFinite(seconds)) return '0:00'
-  
-  const hrs = Math.floor(seconds / 3600)
-  const mins = Math.floor((seconds % 3600) / 60)
-  const secs = Math.floor(seconds % 60)
-  
-  if (hrs > 0) {
-    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-/**
  * Handle seek bar click/drag
  */
 const handleProgressClick = (event: MouseEvent) => {
@@ -166,8 +150,8 @@ const artworkUrl = computed(() => {
           ></div>
         </div>
         <div class="audio-player__time">
-          <span>{{ formatTime(currentDisplayTime) }}</span>
-          <span>{{ formatTime(player.duration.value) }}</span>
+          <span>{{ formatDuration(currentDisplayTime) }}</span>
+          <span>{{ formatDuration(player.duration.value) }}</span>
         </div>
       </div>
 

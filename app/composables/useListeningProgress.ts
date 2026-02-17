@@ -1,6 +1,4 @@
 import { useStorage, useIntervalFn } from '@vueuse/core'
-import { watch } from 'vue'
-import { useAudioPlayer } from './useAudioPlayer'
 
 interface EpisodeProgress {
   position: number // Current playback position in seconds

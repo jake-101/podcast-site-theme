@@ -126,35 +126,33 @@ onMounted(() => {
   font-weight: 600;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .speed-menu__trigger {
-    background-color: var(--muted, #2a2a2a);
-    color: var(--foreground, #f9fafb);
-    border-color: var(--border, rgba(255, 255, 255, 0.1));
-  }
+/* Dark mode support — use data-theme attribute to match the app's manual toggle */
+:global([data-theme='dark']) .speed-menu__trigger {
+  background-color: var(--muted, #2a2a2a);
+  color: var(--foreground, #f9fafb);
+  border-color: var(--border, rgba(255, 255, 255, 0.1));
+}
 
-  .speed-menu__trigger:hover {
-    background-color: var(--muted, #2a2a2a);
-    opacity: 0.8;
-  }
+:global([data-theme='dark']) .speed-menu__trigger:hover {
+  background-color: var(--muted, #2a2a2a);
+  opacity: 0.8;
+}
 
-  .speed-menu__dropdown {
-    background-color: var(--muted, #2a2a2a);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+:global([data-theme='dark']) .speed-menu__dropdown {
+  background-color: var(--muted, #2a2a2a);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
-  .speed-menu__option {
-    color: var(--foreground, #f9fafb);
-  }
+:global([data-theme='dark']) .speed-menu__option {
+  color: var(--foreground, #f9fafb);
+}
 
-  .speed-menu__option:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
+:global([data-theme='dark']) .speed-menu__option:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
 
-  .speed-menu__option--active {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--foreground, #f9fafb);
-  }
+:global([data-theme='dark']) .speed-menu__option--active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--foreground, #f9fafb);
 }
 </style>

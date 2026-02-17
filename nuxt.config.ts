@@ -40,5 +40,12 @@ export default defineNuxtConfig({
     ],
   },
 
+  // @nuxt/image: podcast artwork comes from arbitrary RSS feed CDNs
+  // Use default ipx provider with external image support
+  image: {
+    // Allow all external image sources (podcast CDNs vary by hosting platform)
+    provider: 'ipx',
+  },
+
   devtools: { enabled: true },
 })

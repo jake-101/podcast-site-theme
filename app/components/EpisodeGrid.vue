@@ -25,10 +25,11 @@ const filteredEpisodes = computed(() => {
     return props.episodes
   }
   
-  const query = searchQuery.value.toLowerCase()
+  const query = searchQuery.value.toLowerCase().trim()
   return props.episodes.filter(episode => 
     String(episode.title).toLowerCase().includes(query) ||
-    String(episode.description).toLowerCase().includes(query)
+    String(episode.description).toLowerCase().includes(query) ||
+    (episode.htmlContent ? episode.htmlContent.toLowerCase().includes(query) : false)
   )
 })
 

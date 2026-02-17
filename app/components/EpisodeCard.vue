@@ -21,15 +21,8 @@ const artwork = computed(() => props.episode.artwork || props.showArtwork || '')
 const isCurrentEpisode = computed(() => player.currentEpisode.value?.guid === props.episode.guid)
 const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.value)
 
-// Format date to human-readable format
-const formattedDate = computed(() => {
-  const date = new Date(props.episode.pubDate)
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  })
-})
+// Format date to human-readable format (uses auto-imported formatDate from utils/format.ts)
+const formattedDate = computed(() => formatDate(props.episode.pubDate))
 
 // Format duration in friendly format (e.g., "1hr 30min")
 const formattedDuration = computed(() => {

@@ -1,7 +1,8 @@
 import { Howl } from 'howler'
 import { ref, computed, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
-import { useRoute, useRouter } from '#app'
+import { useRoute } from '#app'
+import { parseTimestamp } from '~/utils/timestamps'
 import type { Episode } from '~/types/podcast'
 
 interface AudioPlayerState {
@@ -40,7 +41,6 @@ let howl: Howl | null = null
  */
 export function useAudioPlayer() {
   const route = useRoute()
-  const router = useRouter()
 
   // Auto-update current time while playing
   const { pause: pauseInterval, resume: resumeInterval } = useIntervalFn(
@@ -89,7 +89,7 @@ export function useAudioPlayer() {
         // Check for ?t= parameter in URL to auto-seek
         if (route.query.t) {
           const timestampSeconds = parseTimestamp(route.query.t as string)
-          if (timestampSeconds !== null) {
+          if (timestampSeconds > 0) {
             seek(timestampSeconds)
           }
         }
@@ -128,6 +128,40 @@ export function useAudioPlayer() {
       state.value.isPlaying = false
       pauseInterval()
     }
+  }
+
+  /**
+   * Preload an episode without starting playback.
+   * Sets the current episode state and fetches metadata (preload: 'metadata')
+   * without initiating any audio playback or unnecessary HTTP requests.
+   */
+  const preload = (episode: Episode) => {
+    if (state.value.currentEpisode?.guid === episode.guid) return
+
+    // Unload previous audio
+    if (howl) {
+      howl.stop()
+      howl.unload()
+      howl = null
+    }
+
+    state.value.currentEpisode = episode
+    state.value.isPlaying = false
+    state.value.currentTime = 0
+    state.value.duration = episode.duration || 0
+    state.value.isLoading = false
+
+    // Create Howl in preload-only mode; do NOT call howl.play()
+    howl = new Howl({
+      src: [episode.audioUrl],
+      html5: true,
+      preload: false, // Don't preload any data; wait until user hits play
+      volume: state.value.volume,
+      rate: state.value.playbackRate,
+      onload: () => {
+        state.value.duration = howl?.duration() || episode.duration || 0
+      },
+    })
   }
 
   /**
@@ -190,7 +224,7 @@ export function useAudioPlayer() {
   const cycleSpeed = () => {
     const currentIndex = SPEED_PRESETS.indexOf(state.value.playbackRate)
     const nextIndex = (currentIndex + 1) % SPEED_PRESETS.length
-    setSpeed(SPEED_PRESETS[nextIndex])
+    setSpeed(SPEED_PRESETS[nextIndex] ?? 1)
   }
 
   /**
@@ -228,32 +262,6 @@ export function useAudioPlayer() {
       setVolume(0)
       state.value.isMuted = true
     }
-  }
-
-  /**
-   * Parse timestamp from ?t= parameter
-   * Supports: seconds (123), MM:SS (4:35), HH:MM:SS (1:23:45)
-   */
-  const parseTimestamp = (timestamp: string): number | null => {
-    if (/^\d+$/.test(timestamp)) {
-      // Plain seconds
-      return parseInt(timestamp, 10)
-    }
-
-    const parts = timestamp.split(':').map(Number)
-    if (parts.some(isNaN)) return null
-
-    if (parts.length === 2) {
-      // MM:SS
-      const [minutes, seconds] = parts
-      return minutes * 60 + seconds
-    } else if (parts.length === 3) {
-      // HH:MM:SS
-      const [hours, minutes, seconds] = parts
-      return hours * 3600 + minutes * 60 + seconds
-    }
-
-    return null
   }
 
   /**
@@ -301,6 +309,7 @@ export function useAudioPlayer() {
 
     // Methods
     play,
+    preload,
     pause,
     toggle,
     seek,

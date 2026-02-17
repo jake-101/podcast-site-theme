@@ -5,6 +5,13 @@
   --transition-hover: 0.2s;
 }
 
+/* Global container utility */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 /* Episode grid layout */
 .episode-grid {
   display: grid;

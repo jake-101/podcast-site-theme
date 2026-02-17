@@ -44,10 +44,11 @@ const handleTimestampClick = (event: MouseEvent) => {
 }
 
 // Auto-seek on mount if ?t= query parameter is present
+// Uses auto-imported parseTimestamp from utils/timestamps.ts
 onMounted(() => {
   if (route.query.t && episode.value) {
-    const timestampSeconds = parseQueryTimestamp(route.query.t as string)
-    if (timestampSeconds !== null) {
+    const timestampSeconds = parseTimestamp(route.query.t as string)
+    if (timestampSeconds > 0) {
       // Small delay to ensure player is ready
       setTimeout(() => {
         if (player.currentEpisode.value?.guid === episode.value?.guid) {
@@ -57,26 +58,6 @@ onMounted(() => {
     }
   }
 })
-
-// Parse ?t= parameter (supports seconds, MM:SS, HH:MM:SS)
-const parseQueryTimestamp = (timestamp: string): number | null => {
-  if (/^\d+$/.test(timestamp)) {
-    return parseInt(timestamp, 10)
-  }
-
-  const parts = timestamp.split(':').map(Number)
-  if (parts.some(isNaN)) return null
-
-  if (parts.length === 2) {
-    const [minutes, seconds] = parts
-    return minutes * 60 + seconds
-  } else if (parts.length === 3) {
-    const [hours, minutes, seconds] = parts
-    return hours * 3600 + minutes * 60 + seconds
-  }
-
-  return null
-}
 
 // Share with timestamp
 const shareUrl = computed(() => {
@@ -377,12 +358,6 @@ useHead({
 .episode-page {
   max-width: 100%;
   padding: 2rem 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
 }
 
 /* ── Header card ── */
