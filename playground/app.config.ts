@@ -9,6 +9,7 @@ export default defineAppConfig({
     },
     episodesPerPage: 18,
     heroType: 'featured',
+    navLogo: 'image',
     theme: 'auto',
   },
 })
