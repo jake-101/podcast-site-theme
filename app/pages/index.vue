@@ -5,6 +5,12 @@ import type { Episode } from '~/types/podcast'
 const { podcast, episodes, loading, error } = usePodcast()
 const appConfig = useAppConfig()
 const player = useAudioPlayer()
+const { clear: clearActiveEpisode } = useActiveEpisode()
+
+// Clear active episode when returning to this page
+onMounted(() => {
+  clearActiveEpisode()
+})
 
 // Handle play episode
 const handlePlayEpisode = (episode: Episode) => {
