@@ -81,7 +81,7 @@ useHead({
       <div class="container">
         <section class="episodes-section">
           <EpisodeGrid 
-            :episodes="episodes"
+            :episodes="appConfig.podcast.heroType === 'featured' ? episodes.slice(1) : episodes"
             :episodes-per-page="appConfig.podcast.episodesPerPage"
             :show-artwork="podcast.artwork"
             :hide-artwork="appConfig.podcast.hideArtwork"

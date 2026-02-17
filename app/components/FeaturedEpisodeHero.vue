@@ -137,12 +137,17 @@ const handlePlay = () => {
   flex-shrink: 0;
 }
 
-.featured-hero__artwork img {
-  width: 100%;
+.featured-hero__artwork {
   aspect-ratio: 1;
-  object-fit: cover;
+  overflow: hidden;
   border-radius: var(--radius-large, 1rem);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.featured-hero__artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
