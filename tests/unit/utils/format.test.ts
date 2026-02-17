@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatDuration, parseDuration } from '../../../app/utils/format'
+import { formatDate, formatDuration, formatDurationFriendly, parseDuration } from '../../../app/utils/format'
 
 describe('formatDate', () => {
   it('formats an ISO date string', () => {
