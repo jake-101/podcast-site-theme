@@ -148,7 +148,12 @@ useHead({
   <div v-if="episode && podcast" class="episode-page">
     <div class="container">
     <!-- Episode header card -->
-    <header class="card episode-header">
+    <Motion
+      as="header"
+      class="card episode-header"
+      :layout-id="`card-${episode.slug}`"
+      :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
+    >
       <div class="episode-header__top">
         <!-- Episode artwork -->
         <Motion 
@@ -187,14 +192,7 @@ useHead({
             </span>
           </div>
 
-          <Motion
-            as="h1"
-            class="episode-title"
-            :layout-id="`title-${episode.slug}`"
-            :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
-          >
-            {{ episode.title }}
-          </Motion>
+          <h1 class="episode-title">{{ episode.title }}</h1>
 
           <p class="episode-podcast-name">{{ podcast.title }}</p>
         </Motion>
@@ -254,7 +252,7 @@ useHead({
           Share
         </button>
       </Motion>
-    </header>
+    </Motion>
 
     <!-- Content tabs: Show Notes / Transcript -->
     <Motion 
