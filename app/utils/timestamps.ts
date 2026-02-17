@@ -37,6 +37,10 @@ export function parseTimestamp(timestamp: string): number {
 export function linkifyTimestamps(html: string, linkClass = 'timestamp-link'): string {
   if (!html) return ''
 
+  // Sanitize href attributes: strip leading/trailing whitespace to prevent
+  // the static prerenderer from treating " https://..." as a relative path.
+  html = html.replace(/href=["']\s+(.*?)\s*["']/g, (_, url) => `href="${url}"`)
+
   // First, convert pre-existing timestamp anchors (e.g. Syntax.fm uses
   // <a href="#t=00:00">00:00</a>) into our timestamp-link format so they
   // get the same badge styling and click handler.
