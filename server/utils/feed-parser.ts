@@ -71,15 +71,27 @@ function parsePodcast2Tags(item: any): Podcast2Tags | undefined {
   const tags: Podcast2Tags = {}
   let hasAnyTag = false
   
-  // Parse transcript
+  // Parse transcript — may be a single object or array of multiple formats
   if (item['podcast:transcript']) {
-    const transcript = item['podcast:transcript']
-    tags.transcript = {
-      url: transcript['@_url'] || transcript.url || '',
-      type: transcript['@_type'] || transcript.type || 'text/plain',
-      language: transcript['@_language'] || transcript.language,
+    const raw = item['podcast:transcript']
+    const transcripts = (Array.isArray(raw) ? raw : [raw]).map((t: any) => ({
+      url: t['@_url'] || t.url || '',
+      type: t['@_type'] || t.type || 'text/plain',
+      language: t['@_language'] || t.language,
+    }))
+
+    // Prefer VTT > SRT > plain text > first available
+    const preferred = (
+      transcripts.find(t => t.type === 'text/vtt') ||
+      transcripts.find(t => t.type === 'application/x-subrip') ||
+      transcripts.find(t => t.type === 'text/plain') ||
+      transcripts[0]
+    )
+
+    if (preferred?.url) {
+      tags.transcript = preferred
+      hasAnyTag = true
     }
-    hasAnyTag = true
   }
   
   // Parse chapters
