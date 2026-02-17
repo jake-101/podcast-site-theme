@@ -703,7 +703,9 @@ useHead({
   }
 
   .episode-artwork {
-    max-width: 280px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
   }
 
   .episode-header__info {
