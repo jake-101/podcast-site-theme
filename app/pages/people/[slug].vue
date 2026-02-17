@@ -66,7 +66,7 @@ useHead({
       <!-- Person header -->
       <header class="person-header card">
         <div class="person-header__avatar">
-          <NuxtImg
+          <img
             v-if="person.img"
             :src="person.img"
             :alt="person.name"
@@ -111,7 +111,7 @@ useHead({
             class="episode-row card"
           >
             <div class="episode-row__artwork">
-              <NuxtImg
+              <img
                 :src="episode.artwork || podcast?.artwork || ''"
                 :alt="`${episode.title} artwork`"
                 width="72"

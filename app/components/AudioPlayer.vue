@@ -77,7 +77,7 @@ const artworkUrl = computed(() => {
     <div class="audio-player__container">
       <!-- Episode artwork -->
       <div class="audio-player__artwork">
-        <NuxtImg
+        <img
           v-if="artworkUrl"
           :src="artworkUrl" 
           :alt="player.currentEpisode.value?.title || 'Podcast artwork'"

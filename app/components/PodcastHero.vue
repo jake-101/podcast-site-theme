@@ -17,7 +17,7 @@ const platformEntries = computed(() => {
 <template>
   <header class="podcast-hero">
     <div class="podcast-hero__artwork">
-      <NuxtImg :src="podcast.artwork" :alt="`${podcast.title} artwork`" width="400" height="400" loading="eager" />
+      <img :src="podcast.artwork" :alt="`${podcast.title} artwork`" width="400" height="400" loading="eager" />
     </div>
 
     <nav v-if="platformEntries.length > 0" class="podcast-hero__subscribe" aria-label="Subscribe to podcast">

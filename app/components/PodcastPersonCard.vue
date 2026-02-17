@@ -14,7 +14,7 @@ const episodeLabel = computed(() => episodeCount.value === 1 ? 'episode' : 'epis
 <template>
   <NuxtLink :to="`/people/${person.slug}`" class="person-card card">
     <div class="person-card__avatar">
-      <NuxtImg
+      <img
         v-if="person.img"
         :src="person.img"
         :alt="person.name"

@@ -73,7 +73,7 @@ const handlePlay = (e: Event) => {
         :layout-id="`artwork-${episode.slug}`"
         :transition="{ type: 'spring', stiffness: 220, damping: 28 }"
       >
-        <NuxtImg :src="artwork" :alt="`${episode.title} artwork`" sizes="300px" loading="lazy" />
+        <img :src="artwork" :alt="`${episode.title} artwork`" loading="lazy" />
       </Motion>
       
       <Motion

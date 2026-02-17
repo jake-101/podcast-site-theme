@@ -187,7 +187,7 @@ useHead({
           :layout-id="`artwork-${episode.slug}`"
           :transition="{ type: 'spring', stiffness: 220, damping: 28 }"
         >
-          <NuxtImg
+          <img
             :src="episode.artwork || podcast.artwork"
             :alt="`${episode.title} artwork`"
             width="400"
@@ -365,7 +365,7 @@ useHead({
             class="episode-person"
           >
             <div class="episode-person__avatar">
-              <NuxtImg
+              <img
                 v-if="person.img"
                 :src="person.img"
                 :alt="person.name"

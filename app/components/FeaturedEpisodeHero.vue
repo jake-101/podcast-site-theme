@@ -55,7 +55,7 @@ const handlePlay = () => {
   <header class="featured-hero">
     <div class="featured-hero__inner container">
       <div class="featured-hero__artwork">
-        <NuxtImg
+        <img
           :src="artwork"
           :alt="`${episode.title} artwork`"
           width="480"

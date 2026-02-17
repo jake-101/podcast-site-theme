@@ -14,7 +14,6 @@ export default defineNuxtConfig({
   modules: [
     '@vueuse/nuxt',
     '@nuxt/icon',
-    '@nuxt/image',
     'motion-v/nuxt',
   ],
 
@@ -39,15 +38,6 @@ export default defineNuxtConfig({
       // Auto-import utils from the layer's app/utils directory
       './app/utils',
     ],
-  },
-
-  // @nuxt/image: podcast artwork is always from external RSS feed CDNs.
-  // The default ipx provider passes external URLs through without transformation —
-  // you still get lazy loading, responsive srcset, and native <img> attributes.
-  // To get actual compression/resizing, override this in your app's nuxt.config.ts
-  // with a cloud provider: provider: 'cloudflare' | 'imgix' | 'cloudinary' etc.
-  image: {
-    provider: 'ipx',
   },
 
   devtools: { enabled: true },

@@ -78,7 +78,7 @@ useHead({
         >
           <NuxtLink :to="`/episodes/${result.slug}`" class="search-page__result-link">
             <div v-if="result.artwork" class="search-page__result-artwork">
-              <NuxtImg :src="result.artwork" :alt="result.title" sizes="80px" loading="lazy" />
+              <img :src="result.artwork" :alt="result.title" loading="lazy" />
             </div>
             <div class="search-page__result-content">
               <h2 class="search-page__result-title">{{ result.title }}</h2>
