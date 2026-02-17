@@ -67,7 +67,13 @@ const handlePlay = (e: Event) => {
       
       <div class="episode-card__content">
         <div class="episode-card__body">
-          <h3>{{ episode.title }}</h3>
+          <Motion
+            as="h3"
+            :layout-id="`title-${episode.slug}`"
+            :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
+          >
+            {{ episode.title }}
+          </Motion>
         </div>
         
         <div class="episode-card__meta">

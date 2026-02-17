@@ -68,7 +68,14 @@ const handlePlay = () => {
         <p class="featured-hero__label">Latest Episode</p>
 
         <NuxtLink :to="`/episodes/${episode.slug}`" class="featured-hero__title-link">
-          <h2 class="featured-hero__title">{{ episode.title }}</h2>
+          <Motion
+            as="h2"
+            class="featured-hero__title"
+            :layout-id="`title-${episode.slug}`"
+            :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
+          >
+            {{ episode.title }}
+          </Motion>
         </NuxtLink>
 
         <div class="featured-hero__meta">

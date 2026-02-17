@@ -172,7 +172,7 @@ useHead({
           class="episode-header__info"
           :initial="{ opacity: 0, y: 20 }"
           :animate="{ opacity: 1, y: 0 }"
-          :transition="{ delay: 0.1, duration: 0.4 }"
+          :transition="{ delay: 0.05, duration: 0.35 }"
         >
           <div v-if="(episode.episodeType && episode.episodeType !== 'full') || episode.explicit" class="episode-badges">
             <span 
@@ -187,7 +187,14 @@ useHead({
             </span>
           </div>
 
-          <h1 class="episode-title">{{ episode.title }}</h1>
+          <Motion
+            as="h1"
+            class="episode-title"
+            :layout-id="`title-${episode.slug}`"
+            :transition="{ type: 'spring', stiffness: 300, damping: 30 }"
+          >
+            {{ episode.title }}
+          </Motion>
 
           <p class="episode-podcast-name">{{ podcast.title }}</p>
         </Motion>
@@ -199,7 +206,7 @@ useHead({
         class="episode-details"
         :initial="{ opacity: 0, y: 20 }"
         :animate="{ opacity: 1, y: 0 }"
-        :transition="{ delay: 0.2, duration: 0.4 }"
+        :transition="{ delay: 0.1, duration: 0.35 }"
       >
         <span class="episode-detail-item">
           <Icon name="ph:calendar-blank" size="16" />
@@ -218,7 +225,7 @@ useHead({
         class="episode-actions"
         :initial="{ opacity: 0, y: 20 }"
         :animate="{ opacity: 1, y: 0 }"
-        :transition="{ delay: 0.25, duration: 0.4 }"
+        :transition="{ delay: 0.15, duration: 0.35 }"
       >
         <div class="episode-actions-left">
           <button 
@@ -256,7 +263,7 @@ useHead({
       class="episode-content-tabs"
       :initial="{ opacity: 0, y: 20 }"
       :animate="{ opacity: 1, y: 0 }"
-      :transition="{ delay: 0.35, duration: 0.4 }"
+      :transition="{ delay: 0.2, duration: 0.4 }"
     >
       <!-- Tab bar (only show if transcript available) -->
       <div v-if="hasTranscript" class="tab-bar">
