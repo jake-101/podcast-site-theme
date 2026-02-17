@@ -271,7 +271,6 @@ useHead({
 
       <!-- Show Notes tab -->
       <div v-show="activeTab === 'shownotes' || !hasTranscript" class="tab-panel">
-        <h2 v-if="!hasTranscript">Show Notes</h2>
         <div 
           v-if="showNotes"
           class="shownotes-content"

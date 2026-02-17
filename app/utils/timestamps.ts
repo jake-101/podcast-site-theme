@@ -36,19 +36,22 @@ export function parseTimestamp(timestamp: string): number {
  */
 export function linkifyTimestamps(html: string, linkClass = 'timestamp-link'): string {
   if (!html) return ''
-  
-  // Pattern matches:
-  // - HH:MM:SS (e.g., 01:23:45)
-  // - MM:SS (e.g., 12:34)
-  // With optional leading/trailing whitespace or brackets
+
+  // Split on existing <a ...>...</a> tags so we never linkify timestamps
+  // that are already inside an anchor (e.g. Syntax.fm wraps them already).
+  const parts = html.split(/(<a[\s\S]*?<\/a>)/gi)
+
   const timestampPattern = /(\b|\s|>|\[)(\d{1,2}:\d{2}(?::\d{2})?)(\b|\s|<|\])/g
-  
-  return html.replace(timestampPattern, (match, before, timestamp, after) => {
-    const seconds = parseTimestamp(timestamp)
-    // Use data-timestamp attribute for the actual value in seconds
-    // This allows the click handler to easily get the seek position
-    return `${before}<a href="#" class="${linkClass}" data-timestamp="${seconds}" onclick="return false;">${timestamp}</a>${after}`
-  })
+
+  return parts.map((part, i) => {
+    // Odd-indexed parts are the matched <a>…</a> blocks — leave untouched
+    if (i % 2 === 1) return part
+
+    return part.replace(timestampPattern, (match, before, timestamp, after) => {
+      const seconds = parseTimestamp(timestamp)
+      return `${before}<a href="#" class="${linkClass}" data-timestamp="${seconds}" onclick="return false;">${timestamp}</a>${after}`
+    })
+  }).join('')
 }
 
 /**
