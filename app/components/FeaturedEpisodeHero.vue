@@ -259,8 +259,8 @@ const handlePlay = () => {
     gap: 1.5rem;
   }
 
-  .featured-hero__artwork img {
-    max-width: 280px;
+  .featured-hero__artwork {
+    width: 280px;
     margin: 0 auto;
   }
 
