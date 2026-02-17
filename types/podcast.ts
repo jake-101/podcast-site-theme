@@ -15,15 +15,15 @@ export interface PlatformLinks {
  * Newsletter signup configuration
  */
 export interface NewsletterConfig {
-  /** Newsletter platform */
+  /** Email platform */
   platform?: 'beehiiv' | 'substack' | 'mailchimp' | 'kit'
-  /** Hosted subscribe page URL — always works, shown as a CTA button */
+  /** Hosted subscribe page URL or embed URL */
   url?: string
-  /** Optional raw HTML embed code (form snippet from the platform) */
+  /** Optional raw HTML embed code (iframe or platform JS snippet) */
   embedCode?: string
-  /** Customizable CTA label */
+  /** CTA heading text */
   label?: string
-  /** Short description shown above the CTA */
+  /** CTA description text */
   description?: string
 }
 
@@ -47,7 +47,6 @@ export interface PodcastConfig {
   siteTitle: string
   platforms: PlatformLinks
   funding: FundingLinks
-  newsletter?: NewsletterConfig
   episodesPerPage: number
   theme: 'light' | 'dark' | 'auto'
 }

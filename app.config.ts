@@ -24,16 +24,6 @@ export default defineAppConfig({
       stripe: '',
       paypal: '',
     },
-
-    // Newsletter signup configuration
-    // Set `url` to enable a CTA button, or `embedCode` for a full inline form
-    newsletter: {
-      platform: '' as '' | 'beehiiv' | 'substack' | 'mailchimp' | 'kit',
-      url: '',
-      embedCode: '',
-      label: 'Subscribe to the newsletter',
-      description: '',
-    },
     
     // Display options
     episodesPerPage: 12,
@@ -49,5 +39,19 @@ export default defineAppConfig({
     
     // Theme: 'light', 'dark', or 'auto'
     theme: 'auto',
+
+    // Newsletter signup (optional)
+    newsletter: {
+      // Email platform: 'beehiiv' | 'substack' | 'mailchimp' | 'kit'
+      platform: '' as '' | 'beehiiv' | 'substack' | 'mailchimp' | 'kit',
+      // Hosted subscribe page URL (link mode — always works)
+      url: '',
+      // Optional raw HTML embed code (iframe or JS snippet from your platform)
+      embedCode: '',
+      // CTA heading text
+      label: 'Get new episodes in your inbox',
+      // CTA description text
+      description: '',
+    },
   },
 })
