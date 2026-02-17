@@ -36,7 +36,10 @@ export async function extractArtworkColors(artworkUrl: string): Promise<Extracte
     let height: number
 
     try {
-      const sharp = (await import('sharp')).default
+      // Dynamic import with a string expression prevents Nitro/Rollup from
+      // attempting to bundle sharp at build time on edge runtimes.
+      const sharpPkg = 'sharp'
+      const sharp = (await import(/* @vite-ignore */ sharpPkg)).default
       // Resize to small dimensions for faster color extraction
       const image = sharp(buffer).resize(64, 64, { fit: 'cover' })
       const { data, info } = await image.raw().ensureAlpha().toBuffer({ resolveWithObject: true })
@@ -45,8 +48,7 @@ export async function extractArtworkColors(artworkUrl: string): Promise<Extracte
       width = info.width
       height = info.height
     } catch {
-      // sharp not available - use a simple fallback approach
-      // Parse raw image data manually (very basic - works for common formats)
+      // sharp not available (e.g. Cloudflare edge runtime) — use fallback
       console.warn('sharp not available, using fallback color extraction')
       return extractFallbackColors(buffer)
     }
