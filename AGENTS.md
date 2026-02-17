@@ -29,49 +29,75 @@ Use the skill tool: `mcp_skill` with `name: "nuxt"`, then read relevant referenc
 
 ### Nuxt Auto-Imports
 
-Nuxt 4 auto-imports composables, utilities, and components. **DO NOT manually import** these:
+Auto-imports behave differently depending on file type. **Read this carefully before writing composables.**
 
-**Auto-imported composables:**
-- `useFetch`, `useAsyncData`, `useState`, `useCookie`, `useRuntimeConfig`
-- `useRoute`, `useRouter`, `navigateTo`, `useRequestURL`
-- `useAppConfig`, `useHead`, `useSeoMeta`
-- All composables from `composables/` directory
-- All utils from `utils/` directory
+#### In `.vue` SFC files
+Everything is auto-imported — Vue APIs, Nuxt composables, local composables, and local utils:
 
-**Auto-imported components:**
+```vue
+<script setup lang="ts">
+// All available without any import statement:
+const route = useRoute()           // Nuxt composable
+const episodes = ref([])           // Vue API
+const slug = generateSlug(title)   // utils/slug.ts
+const { podcast } = usePodcast()   // composables/usePodcast.ts
+</script>
+```
+
+#### In `.ts` composable files (`composables/`, `plugins/`)
+**Vue APIs (`ref`, `computed`, `watch`, etc.) must be explicitly imported from `'vue'`.** Nuxt composables and local utils resolve at runtime, but in `.ts` files you need explicit imports for the LSP and type-checking to work. Use `#app` for Nuxt runtime internals.
+
+```ts
+// app/composables/useAudioPlayer.ts — CORRECT pattern
+import { Howl } from 'howler'                    // ✅ third-party: always import
+import { ref, computed, watch } from 'vue'        // ✅ Vue APIs: must import in .ts files
+import { useIntervalFn } from '@vueuse/core'      // ✅ third-party: always import
+import { useRoute } from '#app'                   // ✅ Nuxt runtime composables
+import type { Episode } from '~/types/podcast'    // ✅ types: always import explicitly
+```
+
+**Import path reference for `.ts` files:**
+
+| What | Correct path |
+|---|---|
+| Vue APIs (`ref`, `computed`, `watch`, etc.) | `'vue'` |
+| Nuxt composables (`useRoute`, `useRouter`, `navigateTo`) | `'#app'` |
+| Auto-import overrides (explicit, catches everything) | `'#imports'` |
+| Third-party packages | package name |
+| Node.js built-ins (server code) | `'node:fs'`, `'node:path'`, etc. |
+| Types | `'~/types/...'` or package |
+
+**`#app` vs `#imports`:** `#app` is for Nuxt app runtime internals. `#imports` is the broader alias that resolves everything Nuxt auto-imports (composables, utils, Vue APIs). Either works; `#app` is more explicit.
+
+**Auto-imported components (all file types):**
 - All components from `components/` directory
 - Nuxt built-ins: `NuxtLink`, `NuxtPage`, `NuxtLayout`, `NuxtImg`, `ClientOnly`
 
-**Auto-imported Vue APIs:**
-- `ref`, `computed`, `reactive`, `watch`, `onMounted`, etc.
-
 **Only manually import:**
 - Third-party packages (`howler`, `fast-xml-parser`, etc.)
-- Node.js built-ins in server code (`fs`, `path`, etc.)
+- Node.js built-ins in server code
 - Types (always import types explicitly)
+- Vue APIs when in `.ts` files (not `.vue`)
 
-**Example - CORRECT:**
-```ts
-// app/composables/usePodcast.ts
-export function usePodcast() {
-  const { data, error } = useFetch('/api/podcast') // ✅ auto-imported
-  const episodes = computed(() => data.value?.episodes ?? []) // ✅ auto-imported
-  return { episodes, error }
+### TypeScript Setup
+
+**The root `tsconfig.json` must extend `.nuxt/tsconfig.json`.** Nuxt generates this file at dev/build time and it contains all path aliases (`~/*`, `#app`, `#imports`), auto-import type declarations, and component stubs. Without extending it, the LSP shows false "cannot find module" errors for `#app`, `~/types/...`, and auto-imported utils.
+
+**Correct `tsconfig.json`:**
+```json
+{
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "types": ["@types/howler"]
+  }
 }
 ```
 
-**Example - WRONG:**
-```ts
-// ❌ DON'T DO THIS
-import { useFetch } from '#app'
-import { computed } from 'vue'
+**Do NOT add standalone `compilerOptions.paths` or duplicate settings** that belong in `.nuxt/tsconfig.json`.
 
-export function usePodcast() {
-  const { data, error } = useFetch('/api/podcast')
-  const episodes = computed(() => data.value?.episodes ?? [])
-  return { episodes, error }
-}
-```
+If the editor shows errors for `#app`, `#imports`, or auto-imported composables/utils:
+1. `.nuxt/tsconfig.json` may not exist yet — run `pnpm nuxt prepare` or start the dev server once.
+2. Check that `tsconfig.json` at the root extends `.nuxt/tsconfig.json`.
 
 ## Architecture
 
@@ -299,7 +325,7 @@ nuxt-podcast-theme/
   - Expose reactive state: `currentEpisode`, `isPlaying`, `currentTime`, `duration`, `volume`, `playbackRate`, `isLoading`
   - Methods: `play(episode)`, `pause()`, `toggle()`, `seek(seconds)`, `skipForward(15)`, `skipBackward(15)`, `setSpeed(rate)`, `setVolume(level)`
   - Speed presets: 1x, 1.25x, 1.5x, 1.75x, 2x
-  - Auto-load latest episode on first visit (paused, ready to play)
+  - Auto-load latest episode on first visit via a `preload(episode)` method that sets state without starting playback — use `preload: false` on the Howl instance to avoid initiating an HTTP request until the user actually plays
   - Handle `?t=` URL parameter to auto-seek to timestamp on episode pages
   - Provide state at app root level so it persists across page navigation
   - deps: Project Scaffolding
