@@ -8,39 +8,29 @@ const props = defineProps<{
 
 const player = useAudioPlayer()
 
-// Fetch transcript directly from the source URL (works in both SSR and static)
+// Fetch transcript from server
 const transcriptUrl = computed(() => props.episode.podcast2?.transcript?.url)
 const transcriptType = computed(() => props.episode.podcast2?.transcript?.type)
 
-const status = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
-const transcriptContent = ref<string | null>(null)
-const error = ref<Error | null>(null)
-
-async function fetchTranscript() {
-  if (!transcriptUrl.value) return
-  status.value = 'pending'
-  error.value = null
-  try {
-    const res = await fetch(transcriptUrl.value)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    transcriptContent.value = await res.text()
-    status.value = 'success'
-  } catch (e) {
-    error.value = e instanceof Error ? e : new Error(String(e))
-    status.value = 'error'
-  }
-}
-
-function refresh() { fetchTranscript() }
-
-// Fetch on mount (client-only) and when URL changes
-onMounted(() => { if (transcriptUrl.value) fetchTranscript() })
-watch(transcriptUrl, (url) => { if (url) fetchTranscript() })
+const { data: transcriptData, status, error, refresh } = useFetch('/api/transcript', {
+  query: {
+    url: transcriptUrl,
+    type: transcriptType,
+  },
+  // Only fetch when we actually have a transcript URL
+  immediate: !!transcriptUrl.value,
+  // Never re-fetch on the client — the server proxy handles the external fetch
+  // to avoid CORS issues when the client tries to reach the transcript host directly
+  server: true,
+  watch: false,
+})
 
 // Parse the transcript content
 const parsedTranscript = computed<ParsedTranscript | null>(() => {
-  if (status.value !== 'success' || !transcriptContent.value) return null
-  return parseTranscript(transcriptContent.value, transcriptType.value ?? 'text/plain', props.episode.duration)
+  if (status.value !== 'success' || !transcriptData.value) return null
+
+  const { content, type } = transcriptData.value as { content: string; type: string; url: string }
+  return parseTranscript(content, type, props.episode.duration)
 })
 
 // Group cues by speaker for display
