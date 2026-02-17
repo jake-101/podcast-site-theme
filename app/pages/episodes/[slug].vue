@@ -6,6 +6,12 @@ const requestURL = useRequestURL()
 const { podcast, findEpisodeBySlug } = usePodcast()
 const player = useAudioPlayer()
 const { getPersonsForEpisode } = usePodcastPeople()
+const { clearActive } = useActiveEpisode()
+
+// Clear active episode after transition completes
+onMounted(() => {
+  setTimeout(clearActive, 600)
+})
 
 // Get episode from slug
 const slug = computed(() => route.params.slug as string)
@@ -148,7 +154,12 @@ useHead({
   <div v-if="episode && podcast" class="episode-page">
     <div class="container">
     <!-- Episode header card -->
-    <header class="card episode-header">
+    <Motion
+      as="header"
+      class="card episode-header"
+      :layout-id="`card-${episode.slug}`"
+      :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
+    >
       <div class="episode-header__top">
         <!-- Episode artwork -->
         <Motion
@@ -247,7 +258,7 @@ useHead({
           Share
         </button>
       </Motion>
-    </header>
+    </Motion>
 
     <!-- Content tabs: Show Notes / Transcript -->
     <Motion 

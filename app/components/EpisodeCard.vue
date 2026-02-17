@@ -14,6 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const player = useAudioPlayer()
+const { activeSlug, setActive } = useActiveEpisode()
 
 const artwork = computed(() => props.episode.artwork || props.showArtwork || '')
 
@@ -53,13 +54,18 @@ const handlePlay = (e: Event) => {
 </script>
 
 <template>
-  <article class="card episode-card">
-    <NuxtLink :to="`/episodes/${episode.slug}`" class="episode-card__link">
+  <Motion
+    as="article"
+    class="card episode-card"
+    :layout-id="activeSlug === episode.slug ? `card-${episode.slug}` : undefined"
+    :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
+  >
+    <NuxtLink :to="`/episodes/${episode.slug}`" class="episode-card__link" @click="setActive(episode.slug)">
       <Motion
         v-if="!hideArtwork"
         as="div"
         class="episode-card__artwork"
-        :layout-id="`artwork-${episode.slug}`"
+        :layout-id="activeSlug === episode.slug ? `artwork-${episode.slug}` : undefined"
         :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
       >
         <NuxtImg :src="artwork" :alt="`${episode.title} artwork`" sizes="300px" loading="lazy" />
@@ -97,7 +103,7 @@ const handlePlay = (e: Event) => {
         </div>
       </div>
     </NuxtLink>
-  </article>
+  </Motion>
 </template>
 
 <style scoped>
