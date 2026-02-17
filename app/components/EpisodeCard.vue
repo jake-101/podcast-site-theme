@@ -41,6 +41,17 @@ const badgeClass = computed(() => {
   return `episode-badge episode-badge--${props.episode.episodeType}`
 })
 
+const router = useRouter()
+
+const handleCardClick = (e: Event) => {
+  e.preventDefault()
+  setActive(props.episode.slug)
+  // Wait a tick so Motion captures the layout-id before navigating
+  nextTick(() => {
+    router.push(`/episodes/${props.episode.slug}`)
+  })
+}
+
 const handlePlay = (e: Event) => {
   e.preventDefault()
   e.stopPropagation()
@@ -60,7 +71,7 @@ const handlePlay = (e: Event) => {
     :layout-id="activeSlug === episode.slug ? `card-${episode.slug}` : undefined"
     :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
   >
-    <NuxtLink :to="`/episodes/${episode.slug}`" class="episode-card__link" @click="setActive(episode.slug)">
+    <NuxtLink :to="`/episodes/${episode.slug}`" class="episode-card__link" @click.prevent="handleCardClick">
       <Motion
         v-if="!hideArtwork"
         as="div"
