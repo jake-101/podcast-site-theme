@@ -6,7 +6,7 @@ export default defineAppConfig({
       rss: 'https://feeds.transistor.fm/cheeky-pint-with-john-collison',
     },
     episodesPerPage: 18,
-    heroType: 'podcast',
+    heroType: 'featured',
     navLogo: 'image',
     theme: 'auto',
   },
