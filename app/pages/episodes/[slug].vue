@@ -245,19 +245,6 @@ useHead({
       </div>
     </header>
 
-    <!-- Keywords -->
-    <section v-if="episode.keywords && episode.keywords.length > 0" class="episode-keywords">
-      <div class="keywords">
-        <span 
-          v-for="keyword in episode.keywords" 
-          :key="keyword"
-          class="keyword-tag"
-        >
-          {{ keyword }}
-        </span>
-      </div>
-    </section>
-
     <!-- Content tabs: Show Notes / Transcript -->
     <section v-if="showNotes || hasTranscript" class="episode-content-tabs">
       <!-- Tab bar (only show if transcript available) -->
@@ -345,6 +332,19 @@ useHead({
             <span v-if="person.role" class="episode-person__role">{{ person.role }}</span>
           </NuxtLink>
         </div>
+      </div>
+    </section>
+
+    <!-- Keywords -->
+    <section v-if="episode.keywords && episode.keywords.length > 0" class="episode-keywords">
+      <div class="keywords">
+        <span
+          v-for="keyword in episode.keywords"
+          :key="keyword"
+          class="keyword-tag"
+        >
+          {{ keyword }}
+        </span>
       </div>
     </section>
 
@@ -561,11 +561,11 @@ useHead({
 }
 
 .keyword-tag {
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.6rem;
   background-color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--muted-foreground);
 }
 
