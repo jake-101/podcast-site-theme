@@ -7,12 +7,13 @@ const router = useRouter()
 // Search state — uses lightweight search index (client-only, lazy loaded)
 const { searchInput, results: searchResults, isSearching, clear: clearSearch } = useEpisodeSearch()
 
-// Dropdown visibility — separate from isSearching so we can close it on navigation
+// Hide dropdown on /search page (results are already shown in full) or after navigation
+const isSearchPage = computed(() => route.path === '/search')
 const dropdownOpen = ref(true)
-const showSearchResults = computed(() => dropdownOpen.value && isSearching.value && searchResults.value.length > 0)
-const showNoResults = computed(() => dropdownOpen.value && isSearching.value && searchResults.value.length === 0)
+const showSearchResults = computed(() => !isSearchPage.value && dropdownOpen.value && isSearching.value && searchResults.value.length > 0)
+const showNoResults = computed(() => !isSearchPage.value && dropdownOpen.value && isSearching.value && searchResults.value.length === 0)
 
-// Re-open dropdown when user types
+// Re-open dropdown when user types (unless on /search page)
 watch(searchInput, () => {
   dropdownOpen.value = true
 })
