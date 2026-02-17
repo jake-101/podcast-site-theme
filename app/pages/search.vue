@@ -45,59 +45,79 @@ useHead({
   <div class="container search-page">
     <header class="search-page__header">
       <h1>Search Episodes</h1>
+    </header>
+
+    <!-- Search results are entirely client-side (search index uses server: false).
+         Wrap in ClientOnly to avoid hydration mismatches between server (no data)
+         and client (data loads lazily). -->
+    <ClientOnly>
       <p v-if="isSearching && results.length > 0" class="search-page__count">
         {{ results.length }} {{ results.length === 1 ? 'result' : 'results' }} for "<strong>{{ queryFromUrl }}</strong>"
       </p>
-    </header>
 
-    <!-- No query state -->
-    <div v-if="!queryFromUrl" class="search-page__empty">
-      <Icon name="ph:magnifying-glass" size="48" />
-      <p>Search for episodes by title or description.</p>
-    </div>
+      <!-- No query state -->
+      <div v-if="!queryFromUrl" class="search-page__empty">
+        <Icon name="ph:magnifying-glass" size="48" />
+        <p>Search for episodes by title or description.</p>
+      </div>
 
-    <!-- No results state -->
-    <div v-else-if="isSearching && results.length === 0" class="search-page__empty">
-      <Icon name="ph:magnifying-glass" size="48" />
-      <p>No episodes found for "<strong>{{ queryFromUrl }}</strong>"</p>
-    </div>
+      <!-- No results state -->
+      <div v-else-if="isSearching && results.length === 0" class="search-page__empty">
+        <Icon name="ph:magnifying-glass" size="48" />
+        <p>No episodes found for "<strong>{{ queryFromUrl }}</strong>"</p>
+      </div>
 
-    <!-- Results list -->
-    <ul v-else class="search-page__results">
-      <li
-        v-for="result in results"
-        :key="result.slug"
-        class="search-page__result"
-        @click="goToEpisode(result.slug)"
-      >
-        <NuxtLink :to="`/episodes/${result.slug}`" class="search-page__result-link">
-          <div v-if="result.artwork" class="search-page__result-artwork">
-            <NuxtImg :src="result.artwork" :alt="result.title" sizes="80px" loading="lazy" />
-          </div>
-          <div class="search-page__result-content">
-            <h2 class="search-page__result-title">{{ result.title }}</h2>
-            <div class="search-page__result-meta">
-              <span v-if="result.episodeType !== 'full'" class="search-page__badge" :class="`search-page__badge--${result.episodeType}`">
-                {{ result.episodeType }}
-              </span>
-              <span v-if="result.episodeNumber" class="search-page__result-meta-item">
-                <Icon name="ph:hash" size="14" />
-                {{ result.episodeNumber }}
-              </span>
-              <span class="search-page__result-meta-item">
-                <Icon name="ph:calendar-blank" size="14" />
-                {{ formatDate(result.pubDate) }}
-              </span>
-              <span class="search-page__result-meta-item">
-                <Icon name="ph:clock" size="14" />
-                {{ formatDurationFriendly(result.duration) }}
-              </span>
+      <!-- Results list -->
+      <ul v-else-if="results.length > 0" class="search-page__results">
+        <li
+          v-for="result in results"
+          :key="result.slug"
+          class="search-page__result"
+          @click="goToEpisode(result.slug)"
+        >
+          <NuxtLink :to="`/episodes/${result.slug}`" class="search-page__result-link">
+            <div v-if="result.artwork" class="search-page__result-artwork">
+              <NuxtImg :src="result.artwork" :alt="result.title" sizes="80px" loading="lazy" />
             </div>
-            <p class="search-page__result-description">{{ truncate(result.description) }}</p>
-          </div>
-        </NuxtLink>
-      </li>
-    </ul>
+            <div class="search-page__result-content">
+              <h2 class="search-page__result-title">{{ result.title }}</h2>
+              <div class="search-page__result-meta">
+                <span v-if="result.episodeType !== 'full'" class="search-page__badge" :class="`search-page__badge--${result.episodeType}`">
+                  {{ result.episodeType }}
+                </span>
+                <span v-if="result.episodeNumber" class="search-page__result-meta-item">
+                  <Icon name="ph:hash" size="14" />
+                  {{ result.episodeNumber }}
+                </span>
+                <span class="search-page__result-meta-item">
+                  <Icon name="ph:calendar-blank" size="14" />
+                  {{ formatDate(result.pubDate) }}
+                </span>
+                <span class="search-page__result-meta-item">
+                  <Icon name="ph:clock" size="14" />
+                  {{ formatDurationFriendly(result.duration) }}
+                </span>
+              </div>
+              <p class="search-page__result-description">{{ truncate(result.description) }}</p>
+            </div>
+          </NuxtLink>
+        </li>
+      </ul>
+
+      <!-- Loading state while search index loads -->
+      <div v-else-if="queryFromUrl" class="search-page__empty">
+        <p>Searching...</p>
+      </div>
+
+      <template #fallback>
+        <div v-if="queryFromUrl" class="search-page__empty">
+          <p>Loading search...</p>
+        </div>
+        <div v-else class="search-page__empty">
+          <p>Search for episodes by title or description.</p>
+        </div>
+      </template>
+    </ClientOnly>
   </div>
 </template>
 

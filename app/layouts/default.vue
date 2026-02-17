@@ -7,11 +7,19 @@ const router = useRouter()
 // Search state — uses lightweight search index (client-only, lazy loaded)
 const { searchInput, results: searchResults, isSearching, clear: clearSearch } = useEpisodeSearch()
 
-// Show search results dropdown when actively searching
-const showSearchResults = computed(() => isSearching.value && searchResults.value.length > 0)
+// Dropdown visibility — separate from isSearching so we can close it on navigation
+const dropdownOpen = ref(true)
+const showSearchResults = computed(() => dropdownOpen.value && isSearching.value && searchResults.value.length > 0)
+const showNoResults = computed(() => dropdownOpen.value && isSearching.value && searchResults.value.length === 0)
+
+// Re-open dropdown when user types
+watch(searchInput, () => {
+  dropdownOpen.value = true
+})
 
 // Navigate to episode when search result is clicked
 const goToEpisode = (slug: string) => {
+  dropdownOpen.value = false
   clearSearch()
   router.push(`/episodes/${slug}`)
 }
@@ -20,7 +28,10 @@ const goToEpisode = (slug: string) => {
 const goToSearchPage = () => {
   const q = searchInput.value.trim()
   if (!q) return
-  clearSearch()
+  dropdownOpen.value = false
+  // Blur the input to dismiss mobile keyboards and close autocomplete
+  const activeEl = document.activeElement as HTMLElement | null
+  activeEl?.blur()
   router.push({ path: '/search', query: { q } })
 }
 
@@ -104,7 +115,7 @@ useHead({
                 @keydown.enter="goToSearchPage"
               />
               <button
-                v-if="searchInput"
+                v-show="searchInput"
                 type="button"
                 class="site-nav__search-clear"
                 aria-label="Clear search"
@@ -137,7 +148,7 @@ useHead({
               </div>
             </div>
             <!-- No results message -->
-            <div v-else-if="isSearching && searchResults.length === 0" class="search-results">
+            <div v-if="showNoResults" class="search-results">
               <div class="search-results__empty">
                 <small>No episodes found</small>
               </div>
