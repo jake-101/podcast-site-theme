@@ -2,28 +2,8 @@
 const appConfig = useAppConfig()
 const { podcast } = usePodcast()
 
-// Artwork-derived theme colors
-const { isLoaded: themeReady, applyThemeColors } = useThemeColors()
-
-// Dark mode support using VueUse
-const colorMode = useColorMode({
-  attribute: 'data-theme',
-  modes: {
-    light: 'light',
-    dark: 'dark',
-  },
-})
-
-// Apply theme colors when data is loaded or color mode changes
-watch(
-  [themeReady, () => colorMode.value],
-  ([ready, mode]) => {
-    if (ready && (mode === 'light' || mode === 'dark')) {
-      applyThemeColors(mode)
-    }
-  },
-  { immediate: true },
-)
+// Consolidated color mode + theme color management
+useColorModeManager()
 
 // RSS auto-discovery meta tag
 useHead({

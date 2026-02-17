@@ -42,6 +42,17 @@ export interface FundingLinks {
 /**
  * Podcast configuration from app.config.ts
  */
+/**
+ * A navigation link shown in the site header
+ */
+export interface NavLink {
+  label: string
+  to: string
+}
+
+/**
+ * Podcast configuration from app.config.ts
+ */
 export interface PodcastConfig {
   feedUrl: string
   siteTitle: string
@@ -49,6 +60,8 @@ export interface PodcastConfig {
   funding: FundingLinks
   episodesPerPage: number
   theme: 'light' | 'dark' | 'auto'
+  /** Custom navigation links. If empty, defaults are auto-generated. */
+  navLinks?: NavLink[]
   /**
    * Offset in seconds to add to transcript timestamps when seeking in the audio player.
    * Use this when the podcast has an intro segment that isn't accounted for in the

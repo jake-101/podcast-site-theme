@@ -37,6 +37,10 @@ export default defineAppConfig({
     // Nav logo: 'text' (podcast title) or 'image' (podcast artwork)
     navLogo: 'text' as 'text' | 'image',
     
+    // Custom navigation links (overrides default auto-generated links)
+    // Set to an array of { label, to } objects. If empty, defaults are used.
+    navLinks: [] as Array<{ label: string; to: string }>,
+    
     // Theme: 'light', 'dark', or 'auto'
     theme: 'auto',
 

@@ -93,23 +93,6 @@ onMounted(() => {
   }
 })
 
-// Share with timestamp
-const shareUrl = computed(() => {
-  if (!episode.value) return ''
-  return player.getShareUrl(episode.value.slug)
-})
-
-const copyShareUrl = async () => {
-  if (shareUrl.value) {
-    try {
-      await navigator.clipboard.writeText(shareUrl.value)
-      alert('Share link copied to clipboard!')
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
-}
-
 // Check if this episode is currently playing
 const isCurrentEpisode = computed(() => player.currentEpisode.value?.guid === episode.value?.guid)
 const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.value)
@@ -240,34 +223,15 @@ useHead({
         </Motion>
       </div>
 
-      <!-- Meta details row -->
-      <Motion
-        as="div"
-        class="episode-details"
-        :initial="{ opacity: 0, y: 20 }"
-        :animate="{ opacity: 1, y: 0 }"
-        :transition="{ delay: 0.1, duration: 0.35 }"
-      >
-        <span class="episode-detail-item">
-          <Icon name="ph:calendar-blank" size="16" />
-          {{ formatDate(episode.pubDate) }}
-        </span>
-        <span v-if="episode.episodeNumber" class="episode-detail-item">
-          <Icon name="ph:hash" size="16" />
-          <template v-if="episode.seasonNumber">S{{ episode.seasonNumber }} </template>
-          E{{ episode.episodeNumber }}
-        </span>
-      </Motion>
-
-      <!-- Actions -->
+      <!-- Actions + metadata row (combined) -->
       <Motion
         as="div"
         class="episode-actions"
         :initial="{ opacity: 0, y: 20 }"
         :animate="{ opacity: 1, y: 0 }"
-        :transition="{ delay: 0.15, duration: 0.35 }"
+        :transition="{ delay: 0.1, duration: 0.35 }"
       >
-        <div class="episode-actions-left">
+        <div class="episode-actions__left">
           <button
             class="play-button"
             type="button"
@@ -278,21 +242,31 @@ useHead({
             {{ isPlaying ? 'Pause' : 'Play Episode' }}
           </button>
 
-          <span class="episode-duration-display">
-            <Icon name="ph:clock" size="16" />
+          <span class="episode-meta-item">
+            <Icon name="ph:clock" size="15" />
             {{ formatDurationFriendly(episode.duration) }}
+          </span>
+
+          <span class="episode-meta-item">
+            <Icon name="ph:calendar-blank" size="15" />
+            {{ formatDate(episode.pubDate) }}
+          </span>
+
+          <span v-if="episode.episodeNumber" class="episode-meta-item">
+            <Icon name="ph:hash" size="15" />
+            <template v-if="episode.seasonNumber">S{{ episode.seasonNumber }} </template>
+            E{{ episode.episodeNumber }}
           </span>
         </div>
 
-        <button
-          class="share-button"
-          type="button"
-          @click="copyShareUrl"
-          title="Copy shareable link with current timestamp"
-        >
-          <Icon name="ph:share-network" size="20" />
-          Share
-        </button>
+        <ClientOnly>
+          <EpisodeSharePopover
+            :episode-title="episode.title"
+            :episode-slug="episode.slug"
+            :podcast-title="podcast.title"
+            :current-time="isCurrentEpisode ? player.currentTime.value : 0"
+          />
+        </ClientOnly>
       </Motion>
     </Motion>
 
@@ -521,86 +495,53 @@ useHead({
   color: var(--muted-foreground);
 }
 
-/* -- Meta details -- */
-.episode-details {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  color: var(--muted-foreground);
-  font-size: 0.9rem;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-}
-
-.episode-detail-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* -- Actions -- */
+/* -- Actions + metadata row -- */
 .episode-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4, 1rem);
   flex-wrap: wrap;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-6, 1.5rem);
+  padding-top: var(--space-6, 1.5rem);
   border-top: 1px solid var(--border);
 }
 
-.episode-actions-left {
+.episode-actions__left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4, 1rem);
   flex-wrap: wrap;
 }
 
-.play-button,
-.share-button {
+.play-button {
   all: unset;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.75rem;
-  border: 1px solid var(--border);
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-2, 0.5rem) var(--space-5, 1.25rem);
+  border: 1px solid var(--primary);
   border-radius: var(--radius-medium);
-  background-color: var(--background);
-  color: var(--foreground);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.play-button:hover,
-.share-button:hover {
-  background-color: var(--muted);
-  border-color: var(--primary);
-}
-
-.play-button {
   background-color: var(--primary);
   color: var(--primary-foreground);
-  border-color: var(--primary);
+  font-size: var(--text-7, 0.875rem);
+  font-weight: var(--font-semibold, 600);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
 .play-button:hover {
-  background-color: color-mix(in srgb, var(--primary), black 10%);
-  color: var(--primary-foreground);
+  background-color: color-mix(in srgb, var(--primary), white 25%);
 }
 
-.episode-duration-display {
+.episode-meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  font-size: var(--text-7, 0.875rem);
   color: var(--muted-foreground);
-  font-weight: 500;
+  white-space: nowrap;
 }
 
 .episode-keywords {
@@ -886,18 +827,15 @@ useHead({
   }
 
   .episode-actions {
-    flex-direction: column;
-    align-items: stretch;
+    gap: var(--space-3, 0.75rem);
   }
 
-  .episode-actions-left {
-    width: 100%;
+  .episode-actions__left {
+    gap: var(--space-3, 0.75rem);
   }
 
-  .play-button,
-  .share-button {
-    justify-content: center;
-    width: 100%;
+  .play-button {
+    padding: var(--space-2, 0.5rem) var(--space-4, 1rem);
   }
 }
 </style>
