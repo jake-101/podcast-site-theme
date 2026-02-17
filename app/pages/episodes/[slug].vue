@@ -152,7 +152,7 @@ useHead({
       as="header"
       class="card episode-header"
       :layout-id="`card-${episode.slug}`"
-      :transition="{ type: 'spring', stiffness: 200, damping: 35 }"
+      :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
     >
       <div class="episode-header__top">
         <!-- Episode artwork -->
@@ -160,7 +160,7 @@ useHead({
           as="div"
           class="episode-artwork"
           :layout-id="`artwork-${episode.slug}`"
-          :transition="{ type: 'spring', stiffness: 200, damping: 35 }"
+          :transition="{ type: 'spring', stiffness: 280, damping: 28 }"
         >
           <NuxtImg 
             :src="episode.artwork || podcast.artwork" 
