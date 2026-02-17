@@ -35,7 +35,7 @@ export default defineAppConfig({
     heroType: 'podcast' as 'podcast' | 'featured',
     
     // Nav logo: 'text' (podcast title) or 'image' (podcast artwork)
-    navLogo: 'text' as 'text' | 'image',
+    navLogo: 'text' as 'text' | 'image' | 'both',
     
     // Custom navigation links (overrides default auto-generated links)
     // Set to an array of { label, to } objects. If empty, defaults are used.

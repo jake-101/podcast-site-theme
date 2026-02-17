@@ -101,12 +101,15 @@ const navLinks = computed(() => {
           <div class="site-nav__left">
             <NuxtLink to="/" class="site-logo">
               <img
-                v-if="appConfig.podcast.navLogo === 'image' && podcast?.artwork"
+                v-if="(appConfig.podcast.navLogo === 'image' || appConfig.podcast.navLogo === 'both') && podcast?.artwork"
                 :src="podcast.artwork"
                 :alt="podcast.title"
                 class="site-logo__image"
               />
-              <span v-else class="site-logo__text">{{ podcast?.title || appConfig.podcast.siteTitle || 'Podcast' }}</span>
+              <span
+                v-if="appConfig.podcast.navLogo === 'text' || appConfig.podcast.navLogo === 'both' || !podcast?.artwork"
+                class="site-logo__text"
+              >{{ podcast?.title || appConfig.podcast.siteTitle || 'Podcast' }}</span>
             </NuxtLink>
 
             <!-- Desktop: inline nav links -->
@@ -332,6 +335,9 @@ const navLinks = computed(() => {
   text-decoration: none;
   color: var(--primary-foreground);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
 }
 
 .site-logo__text {
