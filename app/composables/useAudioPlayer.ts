@@ -3,10 +3,13 @@ import { ref, computed, watch } from 'vue'
 import { useIntervalFn } from '@vueuse/core'
 import { useRoute } from '#app'
 import { parseTimestamp } from '~/utils/timestamps'
-import type { Episode } from '~/types/podcast'
+import type { Episode, EpisodeSummary } from '~/types/podcast'
+
+/** Episode data the player needs — works with both full Episode and lightweight EpisodeSummary */
+type PlayableEpisode = Episode | EpisodeSummary
 
 interface AudioPlayerState {
-  currentEpisode: Episode | null
+  currentEpisode: PlayableEpisode | null
   isPlaying: boolean
   currentTime: number
   duration: number
@@ -56,7 +59,7 @@ export function useAudioPlayer() {
   /**
    * Load and play an episode
    */
-  const play = async (episode: Episode) => {
+  const play = async (episode: PlayableEpisode) => {
     state.value.isLoading = true
 
     // If same episode, just resume
@@ -135,7 +138,7 @@ export function useAudioPlayer() {
    * Sets the current episode state and fetches metadata (preload: 'metadata')
    * without initiating any audio playback or unnecessary HTTP requests.
    */
-  const preload = (episode: Episode) => {
+  const preload = (episode: PlayableEpisode) => {
     if (state.value.currentEpisode?.guid === episode.guid) return
 
     // Unload previous audio

@@ -123,11 +123,51 @@ export interface Episode {
 }
 
 /**
+ * Lightweight episode summary for list views and search index.
+ * Omits htmlContent, podcast2, keywords, and other heavy fields
+ * to keep SSG payloads small.
+ */
+export type EpisodeSummary = Omit<Episode, 'htmlContent' | 'podcast2' | 'keywords' | 'link' | 'audioLength' | 'audioType' | 'explicit'>
+
+/**
+ * Paginated response for episode list endpoints
+ */
+export interface PaginatedEpisodes {
+  episodes: EpisodeSummary[]
+  total: number
+  page: number
+  totalPages: number
+}
+
+/**
+ * Search index entry — minimal fields for client-side search
+ */
+export interface SearchIndexEntry {
+  slug: string
+  title: string
+  description: string
+  pubDate: string
+  duration: number
+  episodeNumber?: number
+  episodeType: 'full' | 'trailer' | 'bonus'
+  artwork?: string
+}
+
+/**
  * Complete podcast feed with show metadata and episodes
  */
 export interface PodcastFeed {
   podcast: Podcast
   episodes: Episode[]
+}
+
+/**
+ * Response from /api/podcast/people/:slug
+ * Returns person details plus their episode summaries (lightweight)
+ */
+export interface PersonDetail {
+  person: Person
+  episodes: EpisodeSummary[]
 }
 
 /**

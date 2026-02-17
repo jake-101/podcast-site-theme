@@ -2,12 +2,22 @@
 const appConfig = useAppConfig()
 const { podcast } = usePodcast()
 const route = useRoute()
+const router = useRouter()
 
-// Search state — shared with EpisodeGrid
-const { searchInput, query: searchQuery, clear: clearSearch } = useEpisodeSearch()
+// Search state — uses lightweight search index (client-only, lazy loaded)
+const { searchInput, results: searchResults, isSearching, clear: clearSearch } = useEpisodeSearch()
 
-// Only show search in nav on the home page
-const isHomePage = computed(() => route.path === '/')
+// Show search results dropdown when actively searching
+const showSearchResults = computed(() => isSearching.value && searchResults.value.length > 0)
+
+// Navigate to episode when search result is clicked
+const goToEpisode = (slug: string) => {
+  clearSearch()
+  router.push(`/episodes/${slug}`)
+}
+
+// Only show search in nav on home and pagination pages
+const isHomePage = computed(() => route.path === '/' || route.path.startsWith('/page/'))
 
 // Dark mode support using VueUse
 const colorMode = useColorMode({
@@ -73,8 +83,8 @@ useHead({
             <h1 v-else>{{ podcast?.title || appConfig.podcast.siteTitle || 'Podcast' }}</h1>
           </NuxtLink>
 
-          <!-- Search input (home page only) -->
-          <div v-if="isHomePage" class="site-nav__search">
+          <!-- Search input with results dropdown -->
+          <div class="site-nav__search">
             <div class="site-nav__search-wrap">
               <Icon name="ph:magnifying-glass" size="16" class="site-nav__search-icon" />
               <input
@@ -93,6 +103,35 @@ useHead({
               >
                 <Icon name="ph:x" size="14" />
               </button>
+            </div>
+            <!-- Search results dropdown -->
+            <div v-if="showSearchResults" class="search-results">
+              <div class="search-results__count">
+                <small>{{ searchResults.length }} {{ searchResults.length === 1 ? 'result' : 'results' }}</small>
+              </div>
+              <ul class="search-results__list">
+                <li
+                  v-for="result in searchResults.slice(0, 8)"
+                  :key="result.slug"
+                  class="search-results__item"
+                  @click="goToEpisode(result.slug)"
+                >
+                  <span class="search-results__title">{{ result.title }}</span>
+                  <span class="search-results__meta">
+                    <template v-if="result.episodeNumber">#{{ result.episodeNumber }} &middot; </template>
+                    {{ formatDate(result.pubDate) }}
+                  </span>
+                </li>
+              </ul>
+              <div v-if="searchResults.length > 8" class="search-results__more">
+                <small>+ {{ searchResults.length - 8 }} more results</small>
+              </div>
+            </div>
+            <!-- No results message -->
+            <div v-else-if="isSearching && searchResults.length === 0" class="search-results">
+              <div class="search-results__empty">
+                <small>No episodes found</small>
+              </div>
             </div>
           </div>
 
@@ -169,6 +208,7 @@ useHead({
   flex: 1;
   max-width: 420px;
   align-self: center;
+  position: relative;
 }
 
 .site-nav__search-wrap {
@@ -237,6 +277,80 @@ useHead({
 
 .site-nav__search-clear:hover {
   color: var(--primary-foreground);
+}
+
+/* Search results dropdown */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-results__count,
+.search-results__more,
+.search-results__empty {
+  padding: 0.5rem 0.75rem;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.search-results__more {
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.search-results__empty {
+  border-bottom: none;
+  text-align: center;
+  padding: 1rem 0.75rem;
+}
+
+.search-results__list {
+  all: unset;
+  display: block;
+  list-style: none;
+}
+
+.search-results__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-results__item:last-child {
+  border-bottom: none;
+}
+
+.search-results__item:hover {
+  background-color: var(--muted);
+}
+
+.search-results__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-results__meta {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
 }
 
 .theme-toggle {

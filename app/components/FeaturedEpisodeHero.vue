@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Episode, Podcast, PlatformLinks } from '~/types/podcast'
+import type { Episode, EpisodeSummary, Podcast, PlatformLinks } from '~/types/podcast'
 
 interface Props {
-  episode: Episode
+  episode: Episode | EpisodeSummary
   podcast: Podcast
   platforms?: PlatformLinks
 }
@@ -10,7 +10,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  play: [episode: Episode]
+  play: [episode: Episode | EpisodeSummary]
 }>()
 
 const player = useAudioPlayer()

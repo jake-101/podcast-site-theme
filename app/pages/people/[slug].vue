@@ -1,25 +1,36 @@
 <script setup lang="ts">
-import type { Episode } from '~/types/podcast'
+import type { Podcast, Person, EpisodeSummary, PersonDetail } from '~/types/podcast'
 
 const route = useRoute()
 const player = useAudioPlayer()
-const { podcast } = usePodcast()
-const { findPersonBySlug, getEpisodesForPerson } = usePodcastPeople()
 
 const slug = computed(() => route.params.slug as string)
-const person = computed(() => findPersonBySlug(slug.value))
 
-// Redirect if person not found (client-side only)
-if (!person.value && !import.meta.server) {
-  navigateTo('/people', { redirectCode: 404 })
+// Fetch person detail + podcast metadata in one batched call.
+// The person detail endpoint returns person + episode summaries (lightweight).
+const { data, status, error } = await useAsyncData(
+  `person-${slug.value}`,
+  async (_nuxtApp, { signal }) => {
+    const [meta, personDetail] = await Promise.all([
+      $fetch<Podcast>('/api/podcast/meta', { signal }),
+      $fetch<PersonDetail>(`/api/podcast/people/${slug.value}`, { signal }),
+    ])
+    return { meta, ...personDetail }
+  },
+)
+
+const podcast = computed(() => data.value?.meta ?? null)
+const person = computed(() => data.value?.person ?? null)
+const personEpisodes = computed<EpisodeSummary[]>(() => data.value?.episodes ?? [])
+
+// Handle 404 — the API returns 404 if the person doesn't exist
+if (error.value) {
+  if (import.meta.client) {
+    navigateTo('/people', { redirectCode: 404 })
+  }
 }
 
-const personEpisodes = computed(() => {
-  if (!person.value) return []
-  return getEpisodesForPerson(person.value)
-})
-
-const handlePlay = (episode: Episode) => {
+const handlePlay = (episode: EpisodeSummary) => {
   player.play(episode)
 }
 
@@ -44,7 +55,7 @@ useHead({
 </script>
 
 <template>
-  <div v-if="person" class="person-page">
+  <div v-if="person && podcast" class="person-page">
     <div class="container">
       <!-- Back link -->
       <NuxtLink to="/people" class="back-link">
@@ -147,7 +158,7 @@ useHead({
   </div>
 
   <!-- 404 fallback -->
-  <div v-else class="person-not-found">
+  <div v-else-if="status !== 'pending'" class="person-not-found">
     <div class="container">
       <h1>Person not found</h1>
       <p>This person doesn't exist in the podcast feed.</p>

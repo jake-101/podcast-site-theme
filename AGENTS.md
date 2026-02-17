@@ -135,10 +135,150 @@ export default defineAppConfig({
 
 Hybrid approach:
 
-- **Server API route** (`GET /api/podcast`) fetches the RSS feed, parses it with `fast-xml-parser`, caches the result via Nitro's `cachedEventHandler` with configurable TTL
-- **SSG/prerendering:** `useFetch` calls the API at build time, pages generate as static HTML
-- **SSR/development:** API called on request, cached in memory
+- **Server API routes** provide paginated, sliced data — each page only gets the data it needs
+- **SSG/prerendering:** `useAsyncData` calls APIs at build time, data is serialized into `_payload.json` as static HTML
+- **SSR/development:** APIs called on request, feed cached in memory (1-hour TTL via `defineCachedFunction`)
 - **Refresh endpoint** (`POST /api/podcast/refresh`) clears cache and re-fetches. Future hook for webhooks/cron.
+
+### Nuxt Data Loading Patterns
+
+**Read this section carefully before writing any data-fetching code.** These patterns directly affect SSG payload size and page performance.
+
+#### The Payload Problem
+
+When `useFetch` or `useAsyncData` runs during SSR/SSG, Nuxt serializes the returned data into the HTML page (as `__NUXT_DATA__` inline script or `_payload.json`). The client then hydrates from this data instead of re-fetching. This means **every byte returned by your data fetcher ends up in the HTML file**.
+
+For a podcast with 900 episodes where each episode has `htmlContent` (full show notes), this can produce 5-15MB HTML files. The fix is to **only fetch what the page actually needs**.
+
+#### Choosing Between `useFetch` and `useAsyncData`
+
+| Use case | Composable | Why |
+|---|---|---|
+| Single API call | `useFetch('/api/endpoint')` | Convenience wrapper, auto-generates key from URL |
+| Multiple parallel API calls | `useAsyncData` + `Promise.all` | Batches requests into a single payload entry |
+| Custom data shaping before payload | `useAsyncData` + `transform` | Full control over what gets serialized |
+| Third-party SDK (not `$fetch`) | `useAsyncData` only | `useFetch` is specifically for `$fetch` |
+
+#### Batching Multiple Requests with `useAsyncData`
+
+**This is the preferred pattern** when a page needs data from multiple API endpoints. Use a single `useAsyncData` call with `Promise.all` inside:
+
+```ts
+// CORRECT — single payload entry, parallel requests, one suspense boundary
+const { data, status, error } = await useAsyncData(
+  'home-page-data',
+  async (_nuxtApp, { signal }) => {
+    const [meta, episodes] = await Promise.all([
+      $fetch('/api/podcast/meta', { signal }),
+      $fetch('/api/podcast/episodes', { query: { page: 1, limit: 12 }, signal }),
+    ])
+    return { meta, episodes }
+  }
+)
+
+const podcast = computed(() => data.value?.meta ?? null)
+const episodes = computed(() => data.value?.episodes ?? [])
+```
+
+**Why this is better than multiple `useFetch` calls:**
+1. **Single payload entry** — one key in `__NUXT_DATA__`, not N separate keys
+2. **Parallel execution** — `Promise.all` fires both requests concurrently on the server
+3. **Single suspense boundary** — one `await` blocks navigation, not sequential awaits
+4. **Atomic loading state** — one `status` ref covers all requests
+
+**Anti-pattern — multiple sequential `useFetch` calls:**
+```ts
+// WRONG — two payload entries, two suspense boundaries, sequential on server
+const { data: meta } = await useFetch('/api/podcast/meta')
+const { data: episodes } = await useFetch('/api/podcast/episodes')
+```
+
+#### The `signal` Parameter
+
+Always pass `signal` through to `$fetch` calls inside `useAsyncData`. This enables Nuxt to abort in-flight requests when navigating away or when `dedupe: 'cancel'` triggers:
+
+```ts
+const { data } = await useAsyncData('my-data',
+  async (_nuxtApp, { signal }) => {
+    return await $fetch('/api/data', { signal })
+  }
+)
+```
+
+#### Minimizing Payload Size
+
+Use `transform` to strip fields that the page doesn't need before they enter the payload:
+
+```ts
+const { data } = await useAsyncData('episode-list',
+  async (_nuxtApp, { signal }) => {
+    return await $fetch('/api/podcast/episodes', { query: { page: 1 }, signal })
+  },
+  {
+    // Strip htmlContent from list views — it's only needed on detail pages
+    transform: (result) => ({
+      ...result,
+      episodes: result.episodes.map(({ htmlContent, ...ep }) => ep)
+    })
+  }
+)
+```
+
+Alternatively, design the API to return only what's needed (preferred — avoids fetching unwanted data at all).
+
+#### Key Naming and Deduplication
+
+Each `useAsyncData` / `useFetch` call needs a unique `key`. Calls with the same key **share state** across components — same `data`, `error`, `status` refs. This is powerful for shared data but requires that options (`handler`, `transform`, `pick`, `deep`) are consistent across all calls with the same key.
+
+```ts
+// Shared across components — any component can read this cached data
+const { data } = await useAsyncData('podcast-meta', ...)
+
+// Page-specific — unique per page number
+const { data } = await useAsyncData(`episodes-page-${pageNum}`, ...)
+
+// Episode-specific — unique per slug
+const { data } = await useAsyncData(`episode-${slug}`, ...)
+```
+
+Use `useNuxtData(key)` to read cached data from another composable without triggering a new fetch.
+
+#### SSG and Route-Based Pagination
+
+For `nuxt generate`, query strings (`?page=2`) do NOT generate separate HTML files — only the base route gets prerendered. To get separate static pages per pagination page, use **route-based pagination**:
+
+```
+pages/
+  index.vue              → / (page 1)
+  page/[pageNumber].vue  → /page/2, /page/3, etc.
+```
+
+Each route generates its own HTML file with its own `_payload.json` containing only that page's episodes. This is critical for keeping payload sizes small on static sites.
+
+#### `server: true` (default) vs `server: false`
+
+- `server: true` (default): Data fetched during SSR, serialized into HTML payload, hydrated on client. **Use for SEO-critical data** (episode content, metadata).
+- `server: false`: Data only fetched on client after hydration. **Use for non-SEO data** loaded on demand (search index, listening progress).
+
+```ts
+// SEO-critical: fetch on server, goes into HTML
+const { data } = await useAsyncData('episodes', ...)
+
+// Not SEO-critical: fetch lazily on client only
+const { data: searchIndex } = await useAsyncData('search-index',
+  () => $fetch('/api/podcast/search-index'),
+  { server: false, lazy: true }
+)
+```
+
+#### Summary of Rules
+
+1. **One `useAsyncData` per page** for the page's primary data, batching with `Promise.all`
+2. **Always pass `signal`** to `$fetch` inside `useAsyncData` handlers
+3. **Design APIs to return only what's needed** — don't return `htmlContent` in list endpoints
+4. **Use unique, descriptive keys** — `'home-page-data'`, `'episode-{slug}'`, not `'data'`
+5. **Route-based pagination** for SSG — `/page/2` not `?page=2`
+6. **`server: false` + `lazy: true`** for on-demand client-only data (search indexes, etc.)
 
 ## RSS Feed Support
 

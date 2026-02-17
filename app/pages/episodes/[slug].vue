@@ -1,19 +1,35 @@
 <script setup lang="ts">
-// Composables and utils are auto-imported by Nuxt 4
+import type { Episode, Podcast, Person } from '~/types/podcast'
+
 const route = useRoute()
 const router = useRouter()
 const requestURL = useRequestURL()
-const { podcast, findEpisodeBySlug } = usePodcast()
 const player = useAudioPlayer()
-const { getPersonsForEpisode } = usePodcastPeople()
 
-// Get episode from slug
+// Get episode slug from route
 const slug = computed(() => route.params.slug as string)
-const episode = computed(() => findEpisodeBySlug(slug.value))
 
-// Handle 404 if episode not found
-if (!episode.value && !import.meta.server) {
-  navigateTo('/', { redirectCode: 404 })
+// Fetch podcast metadata + single full episode in one batched call.
+// Only this one episode's data enters the SSG payload.
+const { data, status, error } = await useAsyncData(
+  `episode-${slug.value}`,
+  async (_nuxtApp, { signal }) => {
+    const [meta, episode] = await Promise.all([
+      $fetch<Podcast>('/api/podcast/meta', { signal }),
+      $fetch<Episode>(`/api/podcast/episodes/${slug.value}`, { signal }),
+    ])
+    return { meta, episode }
+  },
+)
+
+const podcast = computed(() => data.value?.meta ?? null)
+const episode = computed(() => data.value?.episode ?? null)
+
+// Handle 404 if episode not found (API returns 404, useAsyncData sets error)
+if (error.value) {
+  if (import.meta.client) {
+    navigateTo('/', { redirectCode: 404 })
+  }
 }
 
 // Linkified show notes with clickable timestamps
@@ -30,7 +46,7 @@ const handleTimestampClick = (event: MouseEvent) => {
     const timestamp = target.getAttribute('data-timestamp')
     if (timestamp && episode.value) {
       const seconds = parseInt(timestamp, 10)
-      
+
       // Load episode if not current, then seek
       if (player.currentEpisode.value?.guid !== episode.value.guid) {
         player.play(episode.value).then(() => {
@@ -44,12 +60,10 @@ const handleTimestampClick = (event: MouseEvent) => {
 }
 
 // Auto-seek on mount if ?t= query parameter is present
-// Uses auto-imported parseTimestamp from utils/timestamps.ts
 onMounted(() => {
   if (route.query.t && episode.value) {
     const timestampSeconds = parseTimestamp(route.query.t as string)
     if (timestampSeconds > 0) {
-      // Small delay to ensure player is ready
       setTimeout(() => {
         if (player.currentEpisode.value?.guid === episode.value?.guid) {
           player.seek(timestampSeconds)
@@ -84,16 +98,24 @@ const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.valu
 const hasTranscript = computed(() => !!episode.value?.podcast2?.transcript?.url)
 const activeTab = ref<'shownotes' | 'transcript'>('shownotes')
 
-// Persons from the people composable (aggregated, with person page links)
-const episodePersons = computed(() => {
-  if (!episode.value) return []
-  return getPersonsForEpisode(episode.value.slug)
-})
+// Persons data loaded client-only to avoid bloating SSG payload.
+// The people composable now uses the lightweight /api/podcast/people endpoint
+// instead of the full feed, but we still defer to client for episode pages
+// since person data here is supplementary, not SEO-critical.
+const episodePersons = ref<Person[]>([])
+if (import.meta.client) {
+  const { getPersonsForEpisode } = usePodcastPeople()
+  watchEffect(() => {
+    if (episode.value) {
+      episodePersons.value = getPersonsForEpisode(episode.value.slug)
+    }
+  })
+}
 
 // Play/pause this episode
 const playEpisode = () => {
   if (!episode.value) return
-  
+
   if (isPlaying.value) {
     player.pause()
   } else {
@@ -109,11 +131,11 @@ useHead({
   }),
   meta: computed(() => {
     if (!episode.value || !podcast.value) return []
-    
+
     const episodeUrl = `${requestURL.origin}/episodes/${episode.value.slug}`
     const ogTags = generateEpisodeOGTags(episode.value, podcast.value, episodeUrl)
     const twitterTags = generateEpisodeTwitterTags(episode.value, podcast.value)
-    
+
     return [
       { name: 'description', content: episode.value.description },
       // Open Graph
@@ -133,7 +155,7 @@ useHead({
   }),
   script: computed(() => {
     if (!episode.value || !podcast.value) return []
-    
+
     return [
       {
         type: 'application/ld+json',
@@ -162,8 +184,8 @@ useHead({
           :layout-id="`artwork-${episode.slug}`"
           :transition="{ type: 'spring', stiffness: 220, damping: 28 }"
         >
-          <NuxtImg 
-            :src="episode.artwork || podcast.artwork" 
+          <NuxtImg
+            :src="episode.artwork || podcast.artwork"
             :alt="`${episode.title} artwork`"
             width="400"
             height="400"
@@ -172,7 +194,7 @@ useHead({
         </Motion>
 
         <!-- Title and badges -->
-        <Motion 
+        <Motion
           as="div"
           class="episode-header__info"
           :initial="{ opacity: 0, y: 20 }"
@@ -180,8 +202,8 @@ useHead({
           :transition="{ delay: 0.05, duration: 0.35 }"
         >
           <div v-if="(episode.episodeType && episode.episodeType !== 'full') || episode.explicit" class="episode-badges">
-            <span 
-              v-if="episode.episodeType && episode.episodeType !== 'full'" 
+            <span
+              v-if="episode.episodeType && episode.episodeType !== 'full'"
               class="badge episode-type"
               :class="`type-${episode.episodeType}`"
             >
@@ -199,7 +221,7 @@ useHead({
       </div>
 
       <!-- Meta details row -->
-      <Motion 
+      <Motion
         as="div"
         class="episode-details"
         :initial="{ opacity: 0, y: 20 }"
@@ -218,7 +240,7 @@ useHead({
       </Motion>
 
       <!-- Actions -->
-      <Motion 
+      <Motion
         as="div"
         class="episode-actions"
         :initial="{ opacity: 0, y: 20 }"
@@ -226,7 +248,7 @@ useHead({
         :transition="{ delay: 0.15, duration: 0.35 }"
       >
         <div class="episode-actions-left">
-          <button 
+          <button
             class="play-button"
             type="button"
             @click="playEpisode"
@@ -235,14 +257,14 @@ useHead({
             <Icon v-else name="ph:play-fill" size="20" />
             {{ isPlaying ? 'Pause' : 'Play Episode' }}
           </button>
-          
+
           <span class="episode-duration-display">
             <Icon name="ph:clock" size="16" />
             {{ formatDurationFriendly(episode.duration) }}
           </span>
         </div>
 
-        <button 
+        <button
           class="share-button"
           type="button"
           @click="copyShareUrl"
@@ -255,9 +277,9 @@ useHead({
     </Motion>
 
     <!-- Content tabs: Show Notes / Transcript -->
-    <Motion 
+    <Motion
       as="section"
-      v-if="showNotes || hasTranscript" 
+      v-if="showNotes || hasTranscript"
       class="episode-content-tabs"
       :initial="{ opacity: 0, y: 20 }"
       :animate="{ opacity: 1, y: 0 }"
@@ -287,7 +309,7 @@ useHead({
 
       <!-- Show Notes tab -->
       <div v-show="activeTab === 'shownotes' || !hasTranscript" class="tab-panel">
-        <div 
+        <div
           v-if="showNotes"
           class="shownotes-content"
           v-html="showNotes"
@@ -321,9 +343,9 @@ useHead({
       <div v-if="episode.podcast2?.funding?.length" class="feature-item">
         <h3>Support</h3>
         <div v-for="fund in episode.podcast2.funding" :key="fund.url" class="funding-entry">
-          <a 
-            :href="fund.url" 
-            target="_blank" 
+          <a
+            :href="fund.url"
+            target="_blank"
             rel="noopener"
             class="funding-link"
           >
@@ -336,7 +358,7 @@ useHead({
       <div v-if="episodePersons.length" class="feature-item">
         <h3>
           Contributors
-          <NuxtLink to="/people" class="all-people-link">View all people →</NuxtLink>
+          <NuxtLink to="/people" class="all-people-link">View all people &rarr;</NuxtLink>
         </h3>
         <div class="episode-persons">
           <NuxtLink
@@ -380,11 +402,11 @@ useHead({
   </div>
 
   <!-- 404 fallback -->
-  <div v-else class="episode-not-found">
+  <div v-else-if="status !== 'pending'" class="episode-not-found">
     <div class="container">
       <h1>Episode not found</h1>
       <p>The episode you're looking for doesn't exist.</p>
-      <NuxtLink to="/" class="back-link">← Back to home</NuxtLink>
+      <NuxtLink to="/" class="back-link">&larr; Back to home</NuxtLink>
     </div>
   </div>
 </template>
@@ -395,7 +417,7 @@ useHead({
   padding: 2rem 0;
 }
 
-/* ── Header card ── */
+/* -- Header card -- */
 .episode-header {
   margin-bottom: 2rem;
 }
@@ -479,7 +501,7 @@ useHead({
   color: var(--muted-foreground);
 }
 
-/* ── Meta details ── */
+/* -- Meta details -- */
 .episode-details {
   display: flex;
   align-items: center;
@@ -498,7 +520,7 @@ useHead({
   gap: 0.35rem;
 }
 
-/* ── Actions ── */
+/* -- Actions -- */
 .episode-actions {
   display: flex;
   justify-content: space-between;
@@ -580,7 +602,7 @@ useHead({
   color: var(--muted-foreground);
 }
 
-/* ── Content Tabs ── */
+/* -- Content Tabs -- */
 .episode-content-tabs {
   margin-bottom: 2rem;
 }
@@ -649,7 +671,7 @@ useHead({
 }
 
 .shownotes-content :deep(.timestamp-link::before) {
-  content: '▶';
+  content: '\25B6';
   font-size: 0.7em;
   opacity: 0.8;
 }
@@ -688,6 +710,11 @@ useHead({
   margin: 0 0 0.5rem 0;
   font-size: 1rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .funding-link {
@@ -704,14 +731,6 @@ useHead({
 }
 
 /* Contributors (Podcasting 2.0 persons) */
-.feature-item h3 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .all-people-link {
   font-size: 0.8rem;
   font-weight: 400;
@@ -845,7 +864,7 @@ useHead({
     padding: 0.6rem 1rem;
     font-size: 0.875rem;
   }
-  
+
   .episode-actions {
     flex-direction: column;
     align-items: stretch;

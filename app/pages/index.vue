@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { Episode } from '~/types/podcast'
+import type { Episode, Podcast, PaginatedEpisodes, EpisodeSummary } from '~/types/podcast'
 
-// Composables and utils are auto-imported by Nuxt 4
-const { podcast, episodes, loading, error } = usePodcast()
 const appConfig = useAppConfig()
 const player = useAudioPlayer()
 const { clear: clearActiveEpisode } = useActiveEpisode()
@@ -12,9 +10,30 @@ onMounted(() => {
   clearActiveEpisode()
 })
 
+// Fetch podcast metadata + first page of episodes in a single useAsyncData call.
+// This batches both requests into one payload entry with Promise.all.
+const { data, status, error } = await useAsyncData(
+  'home-page-data',
+  async (_nuxtApp, { signal }) => {
+    const [meta, episodePage] = await Promise.all([
+      $fetch<Podcast>('/api/podcast/meta', { signal }),
+      $fetch<PaginatedEpisodes>('/api/podcast/episodes', {
+        query: { page: 1, limit: appConfig.podcast.episodesPerPage },
+        signal,
+      }),
+    ])
+    return { meta, episodePage }
+  },
+)
+
+const podcast = computed(() => data.value?.meta ?? null)
+const episodes = computed(() => data.value?.episodePage?.episodes ?? [])
+const totalPages = computed(() => data.value?.episodePage?.totalPages ?? 0)
+const loading = computed(() => status.value === 'pending')
+
 // Handle play episode
-const handlePlayEpisode = (episode: Episode) => {
-  player.play(episode)
+const handlePlayEpisode = (episode: EpisodeSummary | Episode) => {
+  player.play(episode as Episode)
 }
 
 // SEO: Set meta tags and structured data
@@ -22,10 +41,10 @@ useHead({
   title: computed(() => podcast.value?.title || appConfig.podcast.siteTitle || 'Podcast'),
   meta: computed(() => {
     if (!podcast.value) return []
-    
+
     const ogTags = generatePodcastOGTags(podcast.value)
     const twitterTags = generatePodcastTwitterTags(podcast.value)
-    
+
     return [
       { name: 'description', content: podcast.value.description },
       // Open Graph
@@ -43,7 +62,7 @@ useHead({
   }),
   script: computed(() => {
     if (!podcast.value) return []
-    
+
     return [
       {
         type: 'application/ld+json',
@@ -83,14 +102,15 @@ useHead({
         :platforms="appConfig.podcast.platforms"
       />
 
-      <!-- Episode grid with search and pagination -->
+      <!-- Episode grid with pagination -->
       <div class="container">
         <section class="episodes-section">
-          <EpisodeGrid 
+          <EpisodeGrid
             :episodes="appConfig.podcast.heroType === 'featured' ? episodes.slice(1) : episodes"
-            :episodes-per-page="appConfig.podcast.episodesPerPage"
             :show-artwork="podcast.artwork"
             :hide-artwork="appConfig.podcast.hideArtwork"
+            :total-pages="totalPages"
+            :current-page="1"
             @play="handlePlayEpisode"
           />
         </section>

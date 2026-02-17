@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { Episode } from '~/types/podcast'
+import type { Episode, EpisodeSummary } from '~/types/podcast'
 
 interface Props {
-  episode: Episode
+  episode: Episode | EpisodeSummary
   showArtwork?: string // Fallback to show artwork if episode has none
   hideArtwork?: boolean // Hide episode artwork entirely
 }
@@ -10,7 +10,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  play: [episode: Episode]
+  play: [episode: Episode | EpisodeSummary]
 }>()
 
 const player = useAudioPlayer()

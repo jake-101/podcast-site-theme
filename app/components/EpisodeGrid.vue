@@ -1,109 +1,62 @@
 <script setup lang="ts">
-import type { Episode } from '~/types/podcast'
+import type { EpisodeSummary, Episode } from '~/types/podcast'
 
 interface Props {
-  episodes: Episode[]
-  episodesPerPage?: number
+  /** Pre-paginated episodes for the current page */
+  episodes: (EpisodeSummary | Episode)[]
   showArtwork?: string
   hideArtwork?: boolean
   loading?: boolean
+  /** Total number of pages (from API) */
+  totalPages?: number
+  /** Current page number (from route) */
+  currentPage?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  episodesPerPage: 12,
   loading: false,
+  totalPages: 1,
+  currentPage: 1,
 })
 
 const emit = defineEmits<{
-  play: [episode: Episode]
+  play: [episode: EpisodeSummary | Episode]
 }>()
 
-// Search functionality — shared state with nav search input
-const { query: searchQuery } = useEpisodeSearch()
-const filteredEpisodes = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return props.episodes
-  }
-  
-  const query = searchQuery.value.toLowerCase().trim()
-  return props.episodes.filter(episode => 
-    String(episode.title).toLowerCase().includes(query) ||
-    String(episode.description).toLowerCase().includes(query) ||
-    (episode.htmlContent ? episode.htmlContent.toLowerCase().includes(query) : false)
-  )
-})
-
-// Pagination — synced with URL query string (?page=N)
-const route = useRoute()
 const router = useRouter()
 
-const totalPages = computed(() => 
-  Math.ceil(filteredEpisodes.value.length / props.episodesPerPage)
-)
-
-/** Parse and clamp page number from route query */
-const currentPage = computed(() => {
-  const raw = Number(route.query.page)
-  if (!Number.isFinite(raw) || raw < 1) return 1
-  return Math.min(raw, Math.max(1, totalPages.value))
-})
-
-const paginatedEpisodes = computed(() => {
-  const start = (currentPage.value - 1) * props.episodesPerPage
-  const end = start + props.episodesPerPage
-  return filteredEpisodes.value.slice(start, end)
-})
-
-/** Update URL query param. Uses replace to avoid polluting browser history. */
-const setPage = (page: number) => {
-  const clamped = Math.max(1, Math.min(page, totalPages.value))
-  // Omit ?page=1 to keep the default URL clean
-  const query = { ...route.query }
-  if (clamped <= 1) {
-    delete query.page
+/**
+ * Navigate to a page using route-based pagination.
+ * Page 1 → /, page 2+ → /page/N
+ */
+const goToPage = (page: number) => {
+  if (page <= 1) {
+    router.push('/')
   } else {
-    query.page = String(clamped)
-  }
-  router.replace({ query })
-  if (import.meta.client) {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    router.push(`/page/${page}`)
   }
 }
 
-// Reset to page 1 when search changes
-watch(searchQuery, () => {
-  if (route.query.page) {
-    const query = { ...route.query }
-    delete query.page
-    router.replace({ query })
-  }
-})
-
-const handlePlay = (episode: Episode) => {
+const handlePlay = (episode: EpisodeSummary | Episode) => {
   emit('play', episode)
 }
 </script>
 
 <template>
   <div>
-    <!-- Search result count shown when a query is active -->
-    <p v-if="searchQuery" class="episode-grid__result-count">
-      <small>{{ filteredEpisodes.length }} {{ filteredEpisodes.length === 1 ? 'episode' : 'episodes' }} found</small>
-    </p>
-
     <div v-if="loading">
       <p>Loading episodes...</p>
     </div>
-    
-    <div v-else-if="filteredEpisodes.length === 0">
+
+    <div v-else-if="episodes.length === 0">
       <p>No episodes found.</p>
     </div>
-    
+
     <div v-else>
       <div class="episode-grid">
         <AnimatePresence mode="popLayout">
           <Motion
-            v-for="episode in paginatedEpisodes"
+            v-for="episode in episodes"
             :key="episode.guid"
             as="div"
             :initial="{ opacity: 0 }"
@@ -120,12 +73,12 @@ const handlePlay = (episode: Episode) => {
           </Motion>
         </AnimatePresence>
       </div>
-      
+
       <Pagination
         v-if="totalPages > 1"
         :current-page="currentPage"
         :total-pages="totalPages"
-        @update:current-page="setPage"
+        @update:current-page="goToPage"
       />
     </div>
   </div>
