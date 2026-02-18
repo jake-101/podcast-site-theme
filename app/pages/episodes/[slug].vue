@@ -101,19 +101,13 @@ const isPlaying = computed(() => isCurrentEpisode.value && player.isPlaying.valu
 const hasTranscript = computed(() => !!episode.value?.podcast2?.transcript?.url)
 const activeTab = ref<'shownotes' | 'transcript'>('shownotes')
 
-// Persons data loaded client-only to avoid bloating SSG payload.
-// The people composable now uses the lightweight /api/podcast/people endpoint
-// instead of the full feed, but we still defer to client for episode pages
-// since person data here is supplementary, not SEO-critical.
-const episodePersons = ref<Person[]>([])
-if (import.meta.client) {
-  const { getPersonsForEpisode } = usePodcastPeople()
-  watchEffect(() => {
-    if (episode.value) {
-      episodePersons.value = getPersonsForEpisode(episode.value.slug)
-    }
-  })
-}
+// Persons for this episode — derived from the people composable.
+// usePodcastPeople fetches /api/podcast/people (server: false, lazy: true)
+// so it never enters the SSG payload or causes a hydration mismatch.
+const { getPersonsForEpisode } = usePodcastPeople()
+const episodePersons = computed<Person[]>(() =>
+  episode.value ? getPersonsForEpisode(episode.value.slug) : [],
+)
 
 // Play/pause this episode
 const playEpisode = () => {

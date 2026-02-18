@@ -16,11 +16,15 @@ import type { Person } from '~/types/podcast'
 export const usePodcastPeople = () => {
   // Fetch aggregated people from the server-side endpoint.
   // This avoids fetching the full feed (5MB+) and doing client-side aggregation.
+  // Fetch client-only and lazy — people data is supplementary on episode pages
+  // and not needed for SEO. This prevents SSR/hydration mismatches when the
+  // episode page renders people server-side as [] but the client resolves differently.
   const { data: peopleData, status, error } = useAsyncData(
     'podcast-people',
     async (_nuxtApp, { signal }) => {
       return await $fetch<Person[]>('/api/podcast/people', { signal })
     },
+    { server: false, lazy: true },
   )
 
   const people = computed<Person[]>(() => {
