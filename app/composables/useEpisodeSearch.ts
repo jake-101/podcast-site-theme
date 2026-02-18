@@ -25,7 +25,7 @@ export function useEpisodeSearch() {
   /** Filtered search results — only populated when there's a query */
   const results = computed<SearchIndexEntry[]>(() => {
     const q = debouncedQuery.value.toLowerCase().trim()
-    if (!q || !searchIndex.value) return []
+    if (!q || !Array.isArray(searchIndex.value)) return []
 
     return searchIndex.value.filter(ep =>
       ep.title.toLowerCase().includes(q)

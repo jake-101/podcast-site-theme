@@ -23,7 +23,10 @@ export const usePodcastPeople = () => {
     },
   )
 
-  const people = computed<Person[]>(() => peopleData.value ?? [])
+  const people = computed<Person[]>(() => {
+    const val = peopleData.value
+    return Array.isArray(val) ? val : []
+  })
 
   /** Whether any episodes in this feed have podcast:person data */
   const hasPeople = computed(() => people.value.length > 0)
